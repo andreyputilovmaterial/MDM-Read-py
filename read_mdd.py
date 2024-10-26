@@ -12,6 +12,16 @@ import win32com.client
 
 
 
+'label','attributes','properties','translations','scripting'
+std_col_labels = {
+    'name': 'Item name',
+    'label': 'Label',
+    'attributes': 'Item Attributes',
+    'properties': 'Custom properties',
+    'translations': 'Translation overlay ',
+    'scripting': 'Scripts'
+}
+
 
 
 def normaize_linebreaks(s):
@@ -54,21 +64,27 @@ class MDMDocument:
             openConstants_oREAD = 1
             # openConstants_oREADWRITE = 2
             print('opening MDM document using method "open": "{path}"'.format(path=mdd_path))
+            # we'll check that the file exists so that the error message is more informative - otherwise you see a long stack of messages that do not tell much
+            if not(Path(mdd_path).is_file()):
+                raise FileNotFoundError('file not found: {fname}'.format(fname=mdd_path))
             mDocument.Open( mdd_path, "", openConstants_oREAD )
             self.__document = mDocument
         elif method=='join':
             mDocument = win32com.client.Dispatch("MDM.Document")
             print('opening MDM document using method "join": "{path}"'.format(path=mdd_path))
+            # we'll check that the file exists so that the error message is more informative - otherwise you see a long stack of messages that do not tell much
+            if not(Path(mdd_path).is_file()):
+                raise FileNotFoundError('file not found: {fname}'.format(fname=mdd_path))
             mDocument.Join(mdd_path, "{..}", 1, 32|16|512)
             self.__document = mDocument
         else:
-            raise Exception('MDM Open: Unknown open method, {method}'.format(method=method))
+            raise ValueError('MDM Open: Unknown open method, {method}'.format(method=method))
         
         self.__mdd_path = mdd_path
         self.__read_datetime = datetime.now()
-        # config is initialized here if it was not passed from above; the default config is passed and is set below! Do not update here! Like, you can update here, but anyway it is passed from below!
         config_default = {
             'features': ['label','attributes','properties','translations','scripting'],
+            'sections': ['mdmproperties','languages','shared_lists','fields','pages','routing'],
             'contexts': ['Question','Analysis']
         }
         self.__config = { **config_default, **config }
@@ -77,7 +93,8 @@ class MDMDocument:
 
     # unlink document if some error happened, or if we are done processing it
     def __del__(self):
-        self.__document.Close()
+        if self.__document is not None:
+            self.__document.Close()
         print('MDM document closed')
 
 
@@ -116,7 +133,7 @@ class MDMDocument:
                 for langcode in translations_list:
                     columns_list.append('langcode-{langcode}'.format(langcode=langcode))
             else:
-                raise Exception('feature type is not recognized: "{ft}"'.format(ft=feature_spec))
+                raise AttributeError('feature type is not recognized: "{ft}"'.format(ft=feature_spec))
             if  col_add:
                 columns_list.append(col_add)
         
@@ -132,17 +149,33 @@ class MDMDocument:
             ],
             'report_scheme': {
                 'columns': columns_list,
+                'column_headers': {},
                 'flags': flags_list
             },
-            'sections': [
-                { 'name': 'mdmproperties', 'content': [{'name':'MDM','properties':self.__read_mdm_item_properties(self.__document)}] },
-                { 'name': 'languages', 'content': self.__read_languages() },
-                { 'name': 'shared_lists', 'content': self.__read_sharedlists() },
-                { 'name': 'fields', 'content': self.__read_fields(self.__document.Fields) },
-                { 'name': 'pages', 'content': self.__read_pages() },
-                { 'name': 'routing', 'content': self.__read_routing() },
-            ],
+            'sections': [],
         }
+        for col in result['report_scheme']['columns']:
+            if col in std_col_labels:
+                result['report_scheme']['column_headers'][col] = std_col_labels[col]
+            if re.match(r'^\s*?langcode-',col):
+                result['report_scheme']['column_headers'][col] = '{common_part}{xxx}'.format(common_part=std_col_labels['translations'],xxx=re.sub(r'^\s*?langcode-','',col))
+        for section_name in self.__config['sections']:
+            section_content = None
+            if section_name == 'mdmproperties':
+                section_content = [{'name':'MDM','properties':self.__read_mdm_item_properties(self.__document)}]
+            elif section_name == 'languages':
+                section_content = self.__read_languages()
+            elif section_name == 'shared_lists':
+                section_content =  self.__read_sharedlists()
+            elif section_name == 'fields':
+                section_content = self.__read_fields(self.__document.Fields)
+            elif section_name == 'pages':
+                section_content = self.__read_pages()
+            elif section_name == 'routing':
+                section_content = self.__read_routing()
+            else:
+                raise AttributeError('unrecognized section type: {val}'.format(val=section_content))
+            result['sections'].append({'name':section_name,'content':section_content})
         return result
     
     def __read_languages(self):
@@ -493,7 +526,7 @@ class MDMDocument:
                         val_label = '{val}'.format(val=e)
                     result[read_feature] = val_label
                 else:
-                    raise ValueError('options param is not supported: {feature_type}'.format(feature_type=read_feature))
+                    raise AttributeError('unrecognized feature type: {feature_type}'.format(feature_type=read_feature))
             return result
         
         except Exception as e:
@@ -541,6 +574,7 @@ if __name__ == '__main__':
     config = {
         # 'features': ['label','attributes','properties','translations'], # ,'scripting'],
         'features': ['label','attributes','properties','translations','scripting'],
+        'sections': ['mdmproperties','languages','shared_lists','fields','pages','routing'],
         'contexts': ['Question','Analysis']
     }
     if args.config_features:
