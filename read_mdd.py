@@ -370,7 +370,14 @@ class MDMDocument:
                 # Grid (it seems it's something different than Array, but I can't understand their logic; maybe it's different because it has a different db setup in case data, I don't know)
                 # Execute Error: The '<Object>.IGrid' type does not support the 'categories' property
                 result_item['attributes']['type'] = 'grid'
-                result_item['attributes']['is_grid'] = item.IsGrid
+                try:
+                    # strange, sometimes it crashes here at "IsGrid"
+                    # for example, on Mailchimp SMB auto MDD
+                    # I'll make it optional - we'll continue execution on AttributeError
+                    # it did not crash for me on object_type_value==1 so I am not updating there, but maybe I'l have to
+                    result_item['attributes']['is_grid'] = item.IsGrid
+                except AttributeError:
+                    pass
                 for cat in item.Elements:
                         item_add = self.__read_mdm_item(cat)
                         item_add['name'] = '{prefix}.categories[{name}]'.format(prefix=item_name,name=item_add['name'])
