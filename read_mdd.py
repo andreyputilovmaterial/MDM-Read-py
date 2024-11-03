@@ -162,13 +162,13 @@ class MDMDocument:
         for section_name in self.__config['sections']:
             section_content = None
             if section_name == 'mdmproperties':
-                section_content = [{'name':'MDM','properties':self.__read_mdm_item_properties(self.__document)}]
+                section_content = [{'name':'','properties':self.__read_mdm_item_properties(self.__document)}]
             elif section_name == 'languages':
                 section_content = self.__read_languages()
             elif section_name == 'shared_lists':
                 section_content =  self.__read_sharedlists()
             elif section_name == 'fields':
-                section_content = self.__read_fields(self.__document.Fields)
+                section_content = [] +  [{'name':'','properties':self.__read_mdm_item_properties(self.__document)}]+ self.__read_fields(self.__document.Fields)
             elif section_name == 'pages':
                 section_content = self.__read_pages()
             elif section_name == 'routing':
@@ -360,9 +360,9 @@ class MDMDocument:
                 result_item['attributes']['type'] = 'array'
                 result_item['attributes']['is_grid'] = item.IsGrid
                 for cat in item.Categories:
-                        item_add = self.__read_mdm_item(cat)
-                        item_add['name'] = '{prefix}.categories[{name}]'.format(prefix=item_name,name=item_add['name'])
-                        result_other_items.append(item_add)
+                    item_add = self.__read_mdm_item(cat)
+                    item_add['name'] = '{prefix}.categories[{name}]'.format(prefix=item_name,name=item_add['name'])
+                    result_other_items.append(item_add)
                 for cat in item.Fields:
                     #result_item['attributes']['fields'].append(self.__read_process_field(cat))
                     result_other_items = result_other_items + [ {**item,'name':'{prefix}.{part}'.format(prefix=item_name,part=item['name'])} for item in self.__read_process_field(cat) ]
@@ -379,9 +379,9 @@ class MDMDocument:
                 except AttributeError:
                     pass
                 for cat in item.Elements:
-                        item_add = self.__read_mdm_item(cat)
-                        item_add['name'] = '{prefix}.categories[{name}]'.format(prefix=item_name,name=item_add['name'])
-                        result_other_items.append(item_add)
+                    item_add = self.__read_mdm_item(cat)
+                    item_add['name'] = '{prefix}.categories[{name}]'.format(prefix=item_name,name=item_add['name'])
+                    result_other_items.append(item_add)
                 for cat in item.Fields:
                     #result_item['attributes']['fields'].append(self.__read_process_field(cat))
                     result_other_items = result_other_items + [ {**item,'name':'{prefix}.{part}'.format(prefix=item_name,part=item['name'])} for item in self.__read_process_field(cat) ]
@@ -569,6 +569,11 @@ if __name__ == '__main__':
         help='Config: list contexts (default is Question,Analysis)',
         required=False
     )
+    parser.add_argument(
+        '--config-sections',
+        help='Config: list sections (default is mdmproperties,languages,shared_lists,fields,pages,routing)',
+        required=False
+    )
     args = parser.parse_args()
     inp_mdd = None
     if args.mdd:
@@ -588,6 +593,8 @@ if __name__ == '__main__':
         config['features'] = args.config_features.split(',')
     if args.config_contexts:
         config['contexts'] = args.config_contexts.split(',')
+    if args.config_sections:
+        config['sections'] = args.config_sections.split(',')
 
     print('MDM read script: script started at {dt}'.format(dt=time_start))
 
