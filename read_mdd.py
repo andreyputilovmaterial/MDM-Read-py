@@ -425,7 +425,7 @@ class MDMDocument:
 
             result = []
 
-            config = self.__config
+            # config = self.__config
             document = self.__document
 
             for routing_part in ['DefaultRoutingContext']:
@@ -443,6 +443,7 @@ class MDMDocument:
         try:
             
             document = self.__document
+            config = self.__config
             result_properties = []
             context_preserve = document.Contexts.Current
             properties_list = []
