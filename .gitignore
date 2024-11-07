@@ -5,6 +5,7 @@
 **/[Tt]est*
 ref.py
 **/__pycache__/
+*.pyc
 report.*
 # Except this file
 !.gitignore
