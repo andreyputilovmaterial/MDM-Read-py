@@ -428,7 +428,7 @@ class MDMDocument:
             # config = self.__config
             document = self.__document
 
-            for routing_part in ['DefaultRoutingContext']:
+            for routing_part in ['']:
                 val = '{val}'.format(val=document.Routing.Script)
                 result.append({'name':routing_part,'label':val})
 
@@ -543,7 +543,7 @@ class MDMDocument:
 
 
 
-if __name__ == '__main__':
+def entry_point(config={}):
     time_start = datetime.now()
     parser = argparse.ArgumentParser(
         description="Read MDD"
@@ -575,7 +575,12 @@ if __name__ == '__main__':
         help='Config: list sections (default is mdmproperties,languages,shared_lists,fields,pages,routing)',
         required=False
     )
-    args = parser.parse_args()
+    args = None
+    args_rest = None
+    if( ('arglist_strict' in config) and (not config['arglist_strict']) ):
+        args, args_rest = parser.parse_known_args()
+    else:
+        args = parser.parse_args()
     inp_mdd = None
     if args.mdd:
         inp_mdd = Path(args.mdd)
@@ -611,4 +616,8 @@ if __name__ == '__main__':
 
     time_finish = datetime.now()
     print('MDM read script: finished at {dt} (elapsed {duration})'.format(dt=time_finish,duration=time_finish-time_start))
+
+
+if __name__ == '__main__':
+    entry_point({'arglist_strict':True})
 
