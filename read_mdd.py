@@ -84,7 +84,7 @@ class MDMDocument:
         self.__read_datetime = datetime.now()
         config_default = {
             'features': ['label','attributes','properties','translations','scripting'],
-            'sections': ['mdmproperties','languages','shared_lists','fields','pages','routing'],
+            'sections': ['languages','shared_lists','fields','pages','routing'],
             'contexts': ['Question','Analysis']
         }
         self.__config = { **config_default, **config }
@@ -161,8 +161,10 @@ class MDMDocument:
                 result['report_scheme']['column_headers'][col] = '{common_part}{xxx}'.format(common_part=std_col_labels['translations'],xxx=re.sub(r'^\s*?langcode-','',col))
         for section_name in self.__config['sections']:
             section_content = None
-            if section_name == 'mdmproperties':
-                section_content = [{'name':'','properties':self.__read_mdm_item_properties(self.__document)}]
+            if False:
+                pass
+            # elif section_name == 'mdmproperties':
+            #     section_content = [{'name':'','properties':self.__read_mdm_item_properties(self.__document)}]
             elif section_name == 'languages':
                 section_content = self.__read_languages()
             elif section_name == 'shared_lists':
@@ -572,7 +574,7 @@ def entry_point(config={}):
     )
     parser.add_argument(
         '--config-sections',
-        help='Config: list sections (default is mdmproperties,languages,shared_lists,fields,pages,routing)',
+        help='Config: list sections (default is languages,shared_lists,fields,pages,routing)',
         required=False
     )
     args = None
@@ -592,7 +594,7 @@ def entry_point(config={}):
     config = {
         # 'features': ['label','attributes','properties','translations'], # ,'scripting'],
         'features': ['label','attributes','properties','translations','scripting'],
-        'sections': ['mdmproperties','languages','shared_lists','fields','pages','routing'],
+        'sections': ['languages','shared_lists','fields','pages','routing'],
         'contexts': ['Question','Analysis']
     }
     if args.config_features:
