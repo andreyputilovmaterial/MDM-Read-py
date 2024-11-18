@@ -548,33 +548,40 @@ class MDMDocument:
 def entry_point(config={}):
     time_start = datetime.now()
     parser = argparse.ArgumentParser(
-        description="Read MDD"
+        description="Read MDD",
+        prog='mdmtoolsap --program read_mdd'
     )
     parser.add_argument(
         '-1',
         '--mdd',
         help='Input MDD',
+        type=str,
         required=True
     )
     parser.add_argument(
         '--method',
         default='open',
-        help='Method',
+        help='MDD Reading Method - the same what you have in PrepData or FileTrimmer - can be mdd.open() or mdm.join()',
+        choices=['open','join'],
+        type=str,
         required=False
     )
     parser.add_argument(
         '--config-features',
         help='Config: list features (default is label,properties,translations)',
+        type=str,
         required=False
     )
     parser.add_argument(
         '--config-contexts',
         help='Config: list contexts (default is Question,Analysis)',
+        type=str,
         required=False
     )
     parser.add_argument(
         '--config-sections',
         help='Config: list sections (default is languages,shared_lists,fields,pages,routing)',
+        type=str,
         required=False
     )
     args = None
