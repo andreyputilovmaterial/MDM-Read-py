@@ -170,7 +170,15 @@ class MDMDocument:
             elif section_name == 'shared_lists':
                 section_content =  self.__read_sharedlists()
             elif section_name == 'fields':
-                section_content = [] +  [{'name':'','properties':self.__read_mdm_item_properties(self.__document)}]+ self.__read_fields(self.__document.Fields)
+                zero_item = {
+                    'name': '',
+                }
+                if 'properties' in self.__config['features']:
+                    zero_item['properties'] = self.__read_mdm_item_properties(self.__document)
+                if 'scripting' in self.__config['features']:
+                    zero_item['scripting'] = self.__document.Script
+                fields = self.__read_fields(self.__document.Fields)
+                section_content = [] +  [zero_item] + fields
             elif section_name == 'pages':
                 section_content = self.__read_pages()
             elif section_name == 'routing':
@@ -549,7 +557,7 @@ def entry_point(config={}):
     time_start = datetime.now()
     parser = argparse.ArgumentParser(
         description="Read MDD",
-        prog='mdmtoolsap --program read_mdd'
+        prog='mdmtoolsapram read_mdd'
     )
     parser.add_argument(
         '-1',
