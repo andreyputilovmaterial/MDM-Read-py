@@ -416,6 +416,9 @@ class MDMDocument:
             #     },
             #     **self.__read_mdm_item(cat)
             # })
+            for cat in item.HelperFields:
+                #result_item['attributes']['fields'].append(self.__read_process_field(cat))
+                result_other_items = result_other_items + [ {**item,'name':'{prefix}.{part}'.format(prefix=item_name,part=item['name'])} for item in self.__read_process_field(cat) ]
 
             # we need to reformat attributes collection
             attributes_upd = []
