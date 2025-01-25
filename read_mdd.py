@@ -605,7 +605,11 @@ def entry_point(config={}):
     if args.mdd:
         inp_mdd = Path(args.mdd)
         inp_mdd = '{inp_mdd}'.format(inp_mdd=inp_mdd.resolve())
-    # inp_file_specs = open(inp_file_specs_name, encoding="utf8")
+    else:
+        raise FileNotFoundError('Inp source: file not provided; please use --mdd')
+    
+    if not(Path(inp_mdd).is_file()):
+        raise FileNotFoundError('file not found: {fname}'.format(fname=inp_mdd))
 
     method = '{arg}'.format(arg=args.method) if args.method else 'open'
 
