@@ -431,7 +431,14 @@ class MDMDocument:
 
             for cat in item.HelperFields:
                 #result_item['attributes']['fields'].append(self.__read_process_field(cat))
-                result_other_items = result_other_items + [ {**item,'name':'{prefix}.{part}'.format(prefix=item_name,part=item['name'])} for item in self.__read_process_field(cat) ]
+                result_other_helperfields_items = [ {**item,'name':'{prefix}.{part}'.format(prefix=item_name,part=item['name'])} for item in self.__read_process_field(cat) ]
+                # as a result, we can get a collection of items with all nested elements, categories, inner subfields, etc
+                # but the first item is a root item
+                # and it should exist
+                # and it should receive an attribute that it's a HelperField
+                assert len(result_other_helperfields_items)>=1
+                result_other_helperfields_items[0]['attributes'].append({'name':'is_helper_field','value':'True'})
+                result_other_items = result_other_items + result_other_helperfields_items
 
             # we need to reformat attributes collection
             attributes_upd = []
