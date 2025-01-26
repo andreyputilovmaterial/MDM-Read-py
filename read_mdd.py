@@ -310,6 +310,9 @@ class MDMDocument:
     
     def __read_process_field(self,item):
 
+        def has_attribute(item,attr):
+            return attr.lower() in ['{m}'.format(m=m).lower() for m in dir(item)]
+
         item_name = item.Name
         result_other_items = []
         try:
@@ -326,6 +329,14 @@ class MDMDocument:
                 **self.__read_mdm_item(item)
             }
             object_type_value = item.ObjectTypeValue
+            # ObjectTypeValue constants:
+            # 0 = Question
+            # 1 = Array
+            # 2 = Grid
+            # 3 = Class
+            # 4 = Element
+            # 10 = VariableInstance
+            # 16 = Variables
             if object_type_value==0:
                 # regular variable
                 result_item['attributes']['type'] = 'plain'
@@ -380,14 +391,15 @@ class MDMDocument:
                 # Grid (it seems it's something different than Array, but I can't understand their logic; maybe it's different because it has a different db setup in case data, I don't know)
                 # Execute Error: The '<Object>.IGrid' type does not support the 'categories' property
                 result_item['attributes']['type'] = 'grid'
-                try:
-                    # strange, sometimes it crashes here at "IsGrid"
-                    # for example, on Mailchimp SMB auto MDD
-                    # I'll make it optional - we'll continue execution on AttributeError
-                    # it did not crash for me on object_type_value==1 so I am not updating there, but maybe I'l have to
-                    result_item['attributes']['is_grid'] = item.IsGrid
-                except AttributeError:
-                    pass
+                if has_attribute(item,'IsGrid'):
+                    try:
+                        # strange, sometimes it crashes here at "IsGrid"
+                        # for example, on Mailchimp SMB auto MDD
+                        # I'll make it optional - we'll continue execution on AttributeError
+                        # it did not crash for me on object_type_value==1 so I am not updating there, but maybe I'l have to
+                        result_item['attributes']['is_grid'] = item.IsGrid
+                    except AttributeError:
+                        pass
                 for cat in item.Elements:
                     item_add = self.__read_mdm_item(cat)
                     item_add['name'] = '{prefix}.categories[{name}]'.format(prefix=item_name,name=item_add['name'])
@@ -408,22 +420,23 @@ class MDMDocument:
                 pass
             else:
                 raise ValueError('unrecognized object data type: {val}'.format(val=object_type_value))
-            # for cat in item:
-            #     cat_name = '{name}'.format(name=cat.Name)
-            #     result_item['fields'].append({
-            #     **{
-            #         'name': cat_name
-            #     },
-            #     **self.__read_mdm_item(cat)
-            # })
+            
+            # add couple more attributes necessary for AA and correct data processing
+            if has_attribute(item,'IsSystem'):
+                if item.IsSystem:
+                    result_item['attributes']['is_system'] = 'True'
+            if has_attribute(item,'HasCaseData'):
+                if item.HasCaseData==False:
+                    result_item['attributes']['has_case_data'] = 'False'
+
             for cat in item.HelperFields:
                 #result_item['attributes']['fields'].append(self.__read_process_field(cat))
                 result_other_items = result_other_items + [ {**item,'name':'{prefix}.{part}'.format(prefix=item_name,part=item['name'])} for item in self.__read_process_field(cat) ]
 
             # we need to reformat attributes collection
             attributes_upd = []
-            for itemKey in result_item['attributes'].keys():
-                attributes_upd.append({'name':itemKey,'value':'{val}'.format(val=result_item['attributes'][itemKey])})
+            for item_key, item_value in result_item['attributes'].items():
+                attributes_upd.append({'name':item_key,'value':'{val}'.format(val=item_value)})
             result_item['attributes'] = attributes_upd
 
             return [result_item] + result_other_items
