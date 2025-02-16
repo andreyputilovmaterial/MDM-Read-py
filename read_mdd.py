@@ -12,6 +12,11 @@ import win32com.client
 
 
 
+
+CONFIG_LISTCAT_STEPINTO_SL = True
+
+
+
 'label','attributes','properties','translations','scripting'
 std_col_labels = {
     'name': 'Item name',
@@ -235,7 +240,7 @@ class MDMDocument:
                     result_item
                 )
                 result_item = None
-                for cat in item.Elements:
+                for cat in self.__list_categories(item):
                     #cat_name = '{name}'.format(name=cat.Name)
                     element_item = self.__read_mdm_item(cat)
                     element_item['name'] = '{prefix}.categories[{itemname}]'.format(prefix=sl_name,itemname=element_item['name'])
@@ -360,7 +365,7 @@ class MDMDocument:
                     result_item['attributes']['type'] = 'plain/categorical'
                     result_item['attributes']['minvalue'] = item.MinValue
                     result_item['attributes']['maxvalue'] = item.MaxValue
-                    for cat in item.Categories:
+                    for cat in self.__list_categories(item):
                         item_add = self.__read_mdm_item(cat)
                         item_add['name'] = '{prefix}.categories[{name}]'.format(prefix=item_name,name=item_add['name'])
                         result_other_items.append(item_add)
@@ -380,7 +385,7 @@ class MDMDocument:
                 # array (loop)
                 result_item['attributes']['type'] = 'array'
                 result_item['attributes']['is_grid'] = item.IsGrid
-                for cat in item.Categories:
+                for cat in self.__list_categories(item):
                     item_add = self.__read_mdm_item(cat)
                     item_add['name'] = '{prefix}.categories[{name}]'.format(prefix=item_name,name=item_add['name'])
                     result_other_items.append(item_add)
@@ -400,7 +405,7 @@ class MDMDocument:
                         result_item['attributes']['is_grid'] = item.IsGrid
                     except AttributeError:
                         pass
-                for cat in item.Elements:
+                for cat in self.__list_categories(item):
                     item_add = self.__read_mdm_item(cat)
                     item_add['name'] = '{prefix}.categories[{name}]'.format(prefix=item_name,name=item_add['name'])
                     result_other_items.append(item_add)
@@ -524,6 +529,31 @@ class MDMDocument:
             print('failed when making a list of properties of {itemname}'.format(itemname=itemname))
             raise e
 
+    def __list_categories(self,item):
+        result = []
+        config = self.__config
+        for cat in item.Elements:
+            if cat.IsReference:
+                if 'config_sharedlists_listcats_stepinto' in config and config['config_sharedlists_listcats_stepinto']:
+                    try:
+                        sl_name_clean = re.sub(r'[\^\\/\.]','',cat.ReferenceName,flags=re.I|re.DOTALL)
+                        mdmsharedlist = item.Document.Types[sl_name_clean]
+                        result.extend(self.__list_categories(mdmsharedlist))
+                    except Exception as e:
+                        raise Exception('Was not able to refer to a Shared List "{l}": {e}'.format(l=cat.ReferenceName,e=e)) from e
+                else:
+                    try:
+                        sl_name_clean = re.sub(r'[\^\\/\.]','',cat.ReferenceName,flags=re.I|re.DOTALL)
+                        mdmsharedlist = item.Document.Types[sl_name_clean]
+                        result.append(mdmsharedlist)
+                    except Exception as e:
+                        raise Exception('Was not able to refer to a Shared List "{l}": {e}'.format(l=cat.ReferenceName,e=e)) from e
+            elif cat.Type==0:
+                result.append(cat)
+            else:
+                result.extend(self.__list_categories(cat))
+        return result
+            
     
     def __read_mdm_item(self,item):
 
@@ -615,6 +645,13 @@ def entry_point(config={}):
         type=str,
         required=False
     )
+    parser.add_argument(
+        '--config-sharedlists-listcats',
+        help='Config: should we list all categories when a shared list is referenced, or just print a shared list name ("stepinto" or "stepover")',
+        type=str,
+        choices = ["stepinto","stepover"],
+        required=False
+    )
     args = None
     args_rest = None
     if( ('arglist_strict' in config) and (not config['arglist_strict']) ):
@@ -637,7 +674,8 @@ def entry_point(config={}):
         # 'features': ['label','attributes','properties','translations'], # ,'scripting'],
         'features': ['label','attributes','properties','translations','scripting'],
         'sections': ['languages','shared_lists','fields','pages','routing'],
-        'contexts': ['Question','Analysis']
+        'contexts': ['Question','Analysis'],
+        'config_sharedlists_listcats_stepinto': CONFIG_LISTCAT_STEPINTO_SL,
     }
     if args.config_features:
         config['features'] = args.config_features.split(',')
@@ -645,6 +683,14 @@ def entry_point(config={}):
         config['contexts'] = args.config_contexts.split(',')
     if args.config_sections:
         config['sections'] = args.config_sections.split(',')
+    if args.config_sharedlists_listcats:
+        val = args.config_sharedlists_listcats
+        if val=='stepinto':
+            config['config_sharedlists_listcats_stepinto'] = True
+        elif val=='stepover':
+            config['config_sharedlists_listcats_stepinto'] = False
+        else:
+            raise argparse.ArgumentError('config value not recognized: --config-sharedlists-listcats == "{v}" (should be "stepinto" or "stepover")'.format(v=val))
 
     print('MDM read script: script started at {dt}'.format(dt=time_start))
 
