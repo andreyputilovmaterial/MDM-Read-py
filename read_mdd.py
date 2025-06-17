@@ -550,6 +550,10 @@ class MDMDocument:
                         raise Exception('Was not able to refer to a Shared List "{l}": {e}'.format(l=cat.ReferenceName,e=e)) from e
             elif cat.Type==0:
                 result.append(cat)
+            elif cat.Type==13:
+                result.extend(self.__list_categories(cat))
+            elif (cat.Type==4097) or (re.match(r'^\s*?\d+\s*?$','{s}'.format(s=cat.Name),flags=re.I|re.DOTALL)):
+                result.append(cat)
             else:
                 result.extend(self.__list_categories(cat))
         return result
