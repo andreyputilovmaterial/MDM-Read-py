@@ -5,6 +5,7 @@ import argparse
 from pathlib import Path
 import re
 import json
+import traceback, sys
 
 
 # import pythoncom
@@ -611,105 +612,126 @@ class MDMDocument:
 
 
 def entry_point(config={}):
-    time_start = datetime.now()
-    parser = argparse.ArgumentParser(
-        description="Read MDD",
-        prog='mdmtoolsapram read_mdd'
-    )
-    parser.add_argument(
-        '-1',
-        '--mdd',
-        help='Input MDD',
-        type=str,
-        required=True
-    )
-    parser.add_argument(
-        '--method',
-        default='open',
-        help='MDD Reading Method - the same what you have in PrepData or FileTrimmer - can be mdd.open() or mdm.join()',
-        choices=['open','join'],
-        type=str,
-        required=False
-    )
-    parser.add_argument(
-        '--config-features',
-        help='Config: list features (default is label,properties,translations)',
-        type=str,
-        required=False
-    )
-    parser.add_argument(
-        '--config-contexts',
-        help='Config: list contexts (default is Question,Analysis)',
-        type=str,
-        required=False
-    )
-    parser.add_argument(
-        '--config-sections',
-        help='Config: list sections (default is languages,shared_lists,fields,pages,routing)',
-        type=str,
-        required=False
-    )
-    parser.add_argument(
-        '--config-sharedlists-listcats',
-        help='Config: should we list all categories when a shared list is referenced, or just print a shared list name ("stepinto" or "stepover")',
-        type=str,
-        choices = ["stepinto","stepover"],
-        required=False
-    )
-    args = None
-    args_rest = None
-    if( ('arglist_strict' in config) and (not config['arglist_strict']) ):
-        args, args_rest = parser.parse_known_args()
-    else:
-        args = parser.parse_args()
-    inp_mdd = None
-    if args.mdd:
-        inp_mdd = Path(args.mdd)
-        inp_mdd = '{inp_mdd}'.format(inp_mdd=inp_mdd.resolve())
-    else:
-        raise FileNotFoundError('Inp source: file not provided; please use --mdd')
-    
-    if not(Path(inp_mdd).is_file()):
-        raise FileNotFoundError('file not found: {fname}'.format(fname=inp_mdd))
-
-    method = '{arg}'.format(arg=args.method) if args.method else 'open'
-
-    config = {
-        # 'features': ['label','attributes','properties','translations'], # ,'scripting'],
-        'features': ['label','attributes','properties','translations','scripting'],
-        'sections': ['languages','shared_lists','fields','pages','routing'],
-        'contexts': ['Question','Analysis'],
-        'config_sharedlists_listcats_stepinto': CONFIG_LISTCAT_STEPINTO_SL,
-    }
-    if args.config_features:
-        config['features'] = args.config_features.split(',')
-    if args.config_contexts:
-        config['contexts'] = args.config_contexts.split(',')
-    if args.config_sections:
-        config['sections'] = args.config_sections.split(',')
-    if args.config_sharedlists_listcats:
-        val = args.config_sharedlists_listcats
-        if val=='stepinto':
-            config['config_sharedlists_listcats_stepinto'] = True
-        elif val=='stepover':
-            config['config_sharedlists_listcats_stepinto'] = False
+    try:
+        time_start = datetime.now()
+        parser = argparse.ArgumentParser(
+            description="Read MDD",
+            prog='mdmtoolsapram read_mdd'
+        )
+        parser.add_argument(
+            '-1',
+            '--mdd',
+            help='Input MDD',
+            type=str,
+            required=True
+        )
+        parser.add_argument(
+            '--method',
+            default='open',
+            help='MDD Reading Method - the same what you have in PrepData or FileTrimmer - can be mdd.open() or mdm.join()',
+            choices=['open','join'],
+            type=str,
+            required=False
+        )
+        parser.add_argument(
+            '--config-features',
+            help='Config: list features (default is label,properties,translations)',
+            type=str,
+            required=False
+        )
+        parser.add_argument(
+            '--config-contexts',
+            help='Config: list contexts (default is Question,Analysis)',
+            type=str,
+            required=False
+        )
+        parser.add_argument(
+            '--config-sections',
+            help='Config: list sections (default is languages,shared_lists,fields,pages,routing)',
+            type=str,
+            required=False
+        )
+        parser.add_argument(
+            '--config-sharedlists-listcats',
+            help='Config: should we list all categories when a shared list is referenced, or just print a shared list name ("stepinto" or "stepover")',
+            type=str,
+            choices = ["stepinto","stepover"],
+            required=False
+        )
+        args = None
+        args_rest = None
+        if( ('arglist_strict' in config) and (not config['arglist_strict']) ):
+            args, args_rest = parser.parse_known_args()
         else:
-            raise argparse.ArgumentError('config value not recognized: --config-sharedlists-listcats == "{v}" (should be "stepinto" or "stepover")'.format(v=val))
-
-    print('MDM read script: script started at {dt}'.format(dt=time_start))
-
-    with MDMDocument(inp_mdd,method,config) as doc:
-
-        result = doc.read()
+            args = parser.parse_args()
+        inp_mdd = None
+        if args.mdd:
+            inp_mdd = Path(args.mdd)
+            inp_mdd = '{inp_mdd}'.format(inp_mdd=inp_mdd.resolve())
+        else:
+            raise FileNotFoundError('Inp source: file not provided; please use --mdd')
         
-        result_json = json.dumps(result, indent=4)
-        result_json_fname = ( Path(inp_mdd).parents[0] / '{basename}{ext}'.format(basename=Path(inp_mdd).name,ext='.json') if Path(inp_mdd).is_file() else re.sub(r'^\s*?(.*?)\s*?$',lambda m: '{base}{added}'.format(base=m[1],added='.json'),'{path}'.format(path=inp_mdd)) )
-        print('MDM read script: saving as "{fname}"'.format(fname=result_json_fname))
-        with open(result_json_fname, "w") as outfile:
-            outfile.write(result_json)
+        if not(Path(inp_mdd).is_file()):
+            raise FileNotFoundError('file not found: {fname}'.format(fname=inp_mdd))
 
-    time_finish = datetime.now()
-    print('MDM read script: finished at {dt} (elapsed {duration})'.format(dt=time_finish,duration=time_finish-time_start))
+        method = '{arg}'.format(arg=args.method) if args.method else 'open'
+
+        config = {
+            # 'features': ['label','attributes','properties','translations'], # ,'scripting'],
+            'features': ['label','attributes','properties','translations','scripting'],
+            'sections': ['languages','shared_lists','fields','pages','routing'],
+            'contexts': ['Question','Analysis'],
+            'config_sharedlists_listcats_stepinto': CONFIG_LISTCAT_STEPINTO_SL,
+        }
+        if args.config_features:
+            config['features'] = args.config_features.split(',')
+        if args.config_contexts:
+            config['contexts'] = args.config_contexts.split(',')
+        if args.config_sections:
+            config['sections'] = args.config_sections.split(',')
+        if args.config_sharedlists_listcats:
+            val = args.config_sharedlists_listcats
+            if val=='stepinto':
+                config['config_sharedlists_listcats_stepinto'] = True
+            elif val=='stepover':
+                config['config_sharedlists_listcats_stepinto'] = False
+            else:
+                raise argparse.ArgumentError('config value not recognized: --config-sharedlists-listcats == "{v}" (should be "stepinto" or "stepover")'.format(v=val))
+
+        print('MDM read script: script started at {dt}'.format(dt=time_start))
+
+        with MDMDocument(inp_mdd,method,config) as doc:
+
+            result = doc.read()
+            
+            result_json = json.dumps(result, indent=4)
+            result_json_fname = ( Path(inp_mdd).parents[0] / '{basename}{ext}'.format(basename=Path(inp_mdd).name,ext='.json') if Path(inp_mdd).is_file() else re.sub(r'^\s*?(.*?)\s*?$',lambda m: '{base}{added}'.format(base=m[1],added='.json'),'{path}'.format(path=inp_mdd)) )
+            print('MDM read script: saving as "{fname}"'.format(fname=result_json_fname))
+            with open(result_json_fname, "w") as outfile:
+                outfile.write(result_json)
+
+        time_finish = datetime.now()
+        print('MDM read script: finished at {dt} (elapsed {duration})'.format(dt=time_finish,duration=time_finish-time_start))
+    except Exception as e:
+        # for pretty-printing any issues that happened during runtime; if we hit FileNotFound I don't appreciate when a log traceback is shown, the error should be simple and clear
+        # the program is designed to be user-friendly
+        # that's why we reformat error messages a little bit
+        # stack trace is still printed (I even made it longer to 20 steps!)
+        # but the error message itself is separated and printed as the last message again
+
+        # for example, I don't write 'print('File Not Found!');exit(1);', I just write 'raise FileNotFoundErro()'
+        print('',file=sys.stderr)
+        print('Stack trace:',file=sys.stderr)
+        print('',file=sys.stderr)
+        traceback.print_exception(e,limit=20)
+        print('',file=sys.stderr)
+        print('',file=sys.stderr)
+        print('',file=sys.stderr)
+        print('Error:',file=sys.stderr)
+        print('',file=sys.stderr)
+        print('{e}'.format(e=e),file=sys.stderr)
+        print('',file=sys.stderr)
+        exit(1)
 
 
 if __name__ == '__main__':
