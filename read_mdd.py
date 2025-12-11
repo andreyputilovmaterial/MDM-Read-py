@@ -50,6 +50,10 @@ def normaize_linebreaks(s):
 
 class MDMDocument:
     
+    # a helper error class
+    class ErrorItemNotIterable(Exception):
+        """Raised from list_categories()"""
+        pass
 
     # constructor: load MDD document here
     # three params:
@@ -204,16 +208,23 @@ class MDMDocument:
             document = self.__document
 
             for item in document.Languages:
-                result_part = {'name':'{name}'.format(name=item.Name)}
-                for read_feature in config['features']:
-                    if read_feature=='label':
-                        result_part['label'] = '{val}'.format(val=item.LongName)
-                result.append(result_part)
+                try:
+                    result_part = {'name':'{name}'.format(name=item.Name)}
+                    for read_feature in config['features']:
+                        if read_feature=='label':
+                            result_part['label'] = '{val}'.format(val=item.LongName)
+                    result.append(result_part)
+                except Exception as e:
+                    try:
+                        print('Failed when processing language {e}'.format(e=item.Name),file=sys.stderr)
+                    except:
+                        print('Failed when processing language {e}'.format(e='{e}'.format(e=item)[:31]),file=sys.stderr)
+                    raise e
 
             return result
         
         except Exception as e:
-            print('failed when processing languages')
+            print('failed when processing languages',file=sys.stderr)
             raise e
     
     def __read_sharedlists(self):
@@ -229,28 +240,42 @@ class MDMDocument:
             sharedlists_list = [ '{slname}'.format(slname=slname.Name) for slname in fields ]
             sharedlists_list.sort()
             for sl_name in sharedlists_list:
-                item = fields[sl_name]
-                result_item = {
-                    **{
-                        'name': sl_name,
-                        # 'elements': [],
-                    },
-                    **self.__read_mdm_item(item)
-                }
-                result.append(
-                    result_item
-                )
-                result_item = None
-                for cat in self.__list_categories(item):
-                    #cat_name = '{name}'.format(name=cat.Name)
-                    element_item = self.__read_mdm_item(cat)
-                    element_item['name'] = '{prefix}.categories[{itemname}]'.format(prefix=sl_name,itemname=element_item['name'])
-                    result.append( element_item )
+                try:
+                    item = fields[sl_name]
+                    result_item = {
+                        **{
+                            'name': sl_name,
+                            # 'elements': [],
+                        },
+                        **self.__read_mdm_item(item)
+                    }
+                    result.append(
+                        result_item
+                    )
+                    result_item = None
+                    for cat in self.__list_categories(item):
+                        try:
+                            #cat_name = '{name}'.format(name=cat.Name)
+                            element_item = self.__read_mdm_item(cat)
+                            element_item['name'] = '{prefix}.categories[{itemname}]'.format(prefix=sl_name,itemname=element_item['name'])
+                            result.append( element_item )
+                        except Exception as e:
+                            try:
+                                print('Failed when processing category {e}'.format(e=cat.Name),file=sys.stderr)
+                            except:
+                                print('Failed when processing category {e}'.format(e='{e}'.format(e=cat)[:31]),file=sys.stderr)
+                            raise e
+                except Exception as e:
+                    try:
+                        print('Failed when processing shared list {e}'.format(e=item.Name),file=sys.stderr)
+                    except:
+                        print('Failed when processing shared list {e}'.format(e='{e}'.format(e=sl_name)[:31]),file=sys.stderr)
+                    raise e
 
             return result
         
         except Exception as e:
-            print('failed when processing shared lists')
+            print('failed when processing shared lists',file=sys.stderr)
             raise e
     
     def __read_pages(self):
@@ -265,27 +290,41 @@ class MDMDocument:
 
             pages_list = [ '{name}'.format(name=slname.Name) for slname in fields ]
             for item_name in pages_list:
-                item = fields[item_name]
-                result_item = {
-                    **{
-                        'name': item_name
-                    },
-                    **self.__read_mdm_item(item)
-                }
-                result.append(
-                    result_item
-                )
-                result_item = None
-                for cat in item:
-                    #cat_name = '{name}'.format(name=cat.Name)
-                    item_add = self.__read_mdm_item(cat)
-                    item_add['name'] = '{prefix}.{name}'.format(prefix=item_name,name=item_add['name'])
-                    result.append(item_add)
+                try:
+                    item = fields[item_name]
+                    result_item = {
+                        **{
+                            'name': item_name
+                        },
+                        **self.__read_mdm_item(item)
+                    }
+                    result.append(
+                        result_item
+                    )
+                    result_item = None
+                    for cat in item:
+                        try:
+                            #cat_name = '{name}'.format(name=cat.Name)
+                            item_add = self.__read_mdm_item(cat)
+                            item_add['name'] = '{prefix}.{name}'.format(prefix=item_name,name=item_add['name'])
+                            result.append(item_add)
+                        except Exception as e:
+                            try:
+                                print('Failed when processing page entry {e}'.format(e=cat.Name),file=sys.stderr)
+                            except:
+                                print('Failed when processing page entry {e}'.format(e='{e}'.format(e=cat)[:31]),file=sys.stderr)
+                            raise e
+                except Exception as e:
+                    try:
+                        print('Failed when processing page {e}'.format(e=item.Name),file=sys.stderr)
+                    except:
+                        print('Failed when processing page {e}'.format(e='{e}'.format(e=item_name)[:31]),file=sys.stderr)
+                    raise e
 
             return result
         
         except Exception as e:
-            print('failed when processing pages')
+            print('failed when processing pages',file=sys.stderr)
             raise e
     
     def __read_fields(self,fields):
@@ -305,13 +344,16 @@ class MDMDocument:
                     result = result + result_item
 
                 except Exception as e:
-                    print('failed when processing "{name}"'.format(name=item_name))
+                    try:
+                        print('Failed when processing mdm field {e}'.format(e=item.Name),file=sys.stderr)
+                    except:
+                        print('Failed when processing mdm field {e}'.format(e='{e}'.format(e=item_name)[:31]),file=sys.stderr)
                     raise e
         
             return result
         
         except Exception as e:
-            print('failed when processing fields')
+            print('failed when processing fields',file=sys.stderr)
             raise e
     
     def __read_process_field(self,item):
@@ -455,7 +497,7 @@ class MDMDocument:
             return [result_item] + result_other_items
         
         except Exception as e:
-            print('failed when processing "{name}"'.format(name=item_name))
+            print('failed when processing inner field fields from "{name}"'.format(name=item_name),file=sys.stderr)
             raise e
     
     def __read_routing(self):
@@ -474,7 +516,7 @@ class MDMDocument:
             return result
         
         except Exception as e:
-            print('failed when processing routing')
+            print('failed when processing routing',file=sys.stderr)
             raise e
     
     def __read_mdm_item_properties(self,item):
@@ -527,36 +569,56 @@ class MDMDocument:
                 itemname = item.Name
             except:
                 pass
-            print('failed when making a list of properties of {itemname}'.format(itemname=itemname))
+            print('failed when making a list of properties of {itemname}'.format(itemname=itemname),file=sys.stderr)
             raise e
 
     def __list_categories(self,item):
         result = []
         config = self.__config
+        nested = None
+        try:
+            nested = item.Elements
+        except AttributeError as e:
+            item_name = '<unknown>'
+            try:
+                item_name = item.Name
+            except:
+                pass
+            raise self.__class__.ErrorItemNotIterable('Can\'t iterate over elements in "{catname}"'.format(catname=item_name)) from e
         for cat in item.Elements:
-            if cat.IsReference:
-                if 'config_sharedlists_listcats_stepinto' in config and config['config_sharedlists_listcats_stepinto']:
-                    try:
-                        sl_name_clean = re.sub(r'[\^\\/\.]','',cat.ReferenceName,flags=re.I|re.DOTALL)
-                        mdmsharedlist = item.Document.Types[sl_name_clean]
-                        result.extend(self.__list_categories(mdmsharedlist))
-                    except Exception as e:
-                        raise Exception('Was not able to refer to a Shared List "{l}": {e}'.format(l=cat.ReferenceName,e=e)) from e
+            try:
+                if cat.IsReference:
+                    if 'config_sharedlists_listcats_stepinto' in config and config['config_sharedlists_listcats_stepinto']:
+                        try:
+                            sl_name_clean = re.sub(r'[\^\\/\.]','',cat.ReferenceName,flags=re.I|re.DOTALL)
+                            mdmsharedlist = item.Document.Types[sl_name_clean]
+                            result.extend(self.__list_categories(mdmsharedlist))
+                        except Exception as e:
+                            raise Exception('Was not able to refer to a Shared List "{l}": {e}'.format(l=cat.ReferenceName,e=e)) from e
+                    else:
+                        try:
+                            sl_name_clean = re.sub(r'[\^\\/\.]','',cat.ReferenceName,flags=re.I|re.DOTALL)
+                            mdmsharedlist = item.Document.Types[sl_name_clean]
+                            result.append(mdmsharedlist)
+                        except Exception as e:
+                            raise Exception('Was not able to refer to a Shared List "{l}": {e}'.format(l=cat.ReferenceName,e=e)) from e
+                elif cat.Type==0:
+                    result.append(cat)
+                elif cat.Type==13:
+                    result.extend(self.__list_categories(cat))
+                elif (cat.Type==4097) or (re.match(r'^\s*?\d+\s*?$','{s}'.format(s=cat.Name),flags=re.I|re.DOTALL)):
+                    result.append(cat)
                 else:
                     try:
-                        sl_name_clean = re.sub(r'[\^\\/\.]','',cat.ReferenceName,flags=re.I|re.DOTALL)
-                        mdmsharedlist = item.Document.Types[sl_name_clean]
-                        result.append(mdmsharedlist)
-                    except Exception as e:
-                        raise Exception('Was not able to refer to a Shared List "{l}": {e}'.format(l=cat.ReferenceName,e=e)) from e
-            elif cat.Type==0:
-                result.append(cat)
-            elif cat.Type==13:
-                result.extend(self.__list_categories(cat))
-            elif (cat.Type==4097) or (re.match(r'^\s*?\d+\s*?$','{s}'.format(s=cat.Name),flags=re.I|re.DOTALL)):
-                result.append(cat)
-            else:
-                result.extend(self.__list_categories(cat))
+                        result.extend(self.__list_categories(cat))
+                    except self.__class__.ErrorItemNotIterable:
+                        result.append(cat)
+            except Exception as e:
+                try:
+                    print('Failed when processing element or category: {cat}'.format(cat=cat.Name),file=sys.stderr)
+                except:
+                    print('Failed when processing element or category: {cat}'.format(cat='{e}'.format(e=cat)[:31]),file=sys.stderr)
+                raise e
         return result
             
     
@@ -606,7 +668,7 @@ class MDMDocument:
             return result
         
         except Exception as e:
-            print('failed when processing "{name}"'.format(name=item_name))
+            print('failed when processing "{name}"'.format(name=item_name),file=sys.stderr)
             raise e
 
 
