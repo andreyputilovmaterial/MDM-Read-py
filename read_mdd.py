@@ -8,8 +8,18 @@ import json
 import traceback, sys
 
 
-# import pythoncom
-import win32com.client
+# # import pythoncom
+# import win32com.client
+# from win32com_adapter import Win32Client
+if __name__ == '__main__':
+    # run as a program
+    from win32com_adapter import Win32Client
+elif '.' in __name__:
+    # package
+    from .win32com_adapter import Win32Client
+else:
+    # included with no parent package
+    from win32com_adapter import Win32Client
 
 
 
@@ -49,7 +59,7 @@ def normaize_linebreaks(s):
 # when done, file descriptor is released (this is also happening on exceptions because it is specced in __del__ method)
 
 class MDMDocument:
-    
+
     # a helper error class
     class ErrorItemNotIterable(Exception):
         """Raised from list_categories()"""
@@ -69,7 +79,8 @@ class MDMDocument:
         self.__document = None
 
         if method=='open':
-            mDocument = win32com.client.Dispatch("MDM.Document")
+            # mDocument = win32com.client.Dispatch("MDM.Document")
+            mDocument = Win32Client.Dispatch("MDM.Document")
             # openConstants_oNOSAVE = 3
             openConstants_oREAD = 1
             # openConstants_oREADWRITE = 2
@@ -80,7 +91,8 @@ class MDMDocument:
             mDocument.Open( mdd_path, "", openConstants_oREAD )
             self.__document = mDocument
         elif method=='join':
-            mDocument = win32com.client.Dispatch("MDM.Document")
+            # mDocument = win32com.client.Dispatch("MDM.Document")
+            mDocument = Win32Client.Dispatch("MDM.Document")
             print('opening MDM document using method "join": "{path}"'.format(path=mdd_path))
             # we'll check that the file exists so that the error message is more informative - otherwise you see a long stack of messages that do not tell much
             if not(Path(mdd_path).is_file()):
@@ -89,7 +101,7 @@ class MDMDocument:
             self.__document = mDocument
         else:
             raise ValueError('MDM Open: Unknown open method, {method}'.format(method=method))
-        
+
         self.__mdd_path = mdd_path
         self.__read_datetime = datetime.now()
         config_default = {
@@ -98,7 +110,7 @@ class MDMDocument:
             'contexts': ['Question','Analysis']
         }
         self.__config = { **config_default, **config }
-    
+
 
 
     # unlink document if some error happened, or if we are done processing it
@@ -112,10 +124,10 @@ class MDMDocument:
     # strange methods required by python so that I can use "with"
     # I still don't understand why this is needed as we already have __init__ and __del__ and allll should work, why on Earth __enter__ and __exit__ are necessary????
     def __enter__(self):
-        return self    
+        return self
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-    
+
 
 
     # actually the main method of this class
@@ -146,7 +158,7 @@ class MDMDocument:
                 raise AttributeError('feature type is not recognized: "{ft}"'.format(ft=feature_spec))
             if  col_add:
                 columns_list.append(col_add)
-        
+
         # ok, here's the final result
         # that's what we return
         result = {
@@ -197,7 +209,7 @@ class MDMDocument:
                 raise AttributeError('unrecognized section type: {val}'.format(val=section_content))
             result['sections'].append({'name':section_name,'content':section_content})
         return result
-    
+
     def __read_languages(self):
 
         try:
@@ -222,11 +234,11 @@ class MDMDocument:
                     raise e
 
             return result
-        
+
         except Exception as e:
             print('failed when processing languages',file=sys.stderr)
             raise e
-    
+
     def __read_sharedlists(self):
 
         try:
@@ -273,11 +285,11 @@ class MDMDocument:
                     raise e
 
             return result
-        
+
         except Exception as e:
             print('failed when processing shared lists',file=sys.stderr)
             raise e
-    
+
     def __read_pages(self):
 
         try:
@@ -322,11 +334,11 @@ class MDMDocument:
                     raise e
 
             return result
-        
+
         except Exception as e:
             print('failed when processing pages',file=sys.stderr)
             raise e
-    
+
     def __read_fields(self,fields):
 
         try:
@@ -349,13 +361,13 @@ class MDMDocument:
                     except:
                         print('Failed when processing mdm field {e}'.format(e='{e}'.format(e=item_name)[:31]),file=sys.stderr)
                     raise e
-        
+
             return result
-        
+
         except Exception as e:
             print('failed when processing fields',file=sys.stderr)
             raise e
-    
+
     def __read_process_field(self,item):
 
         def has_attribute(item,attr):
@@ -468,7 +480,7 @@ class MDMDocument:
                 pass
             else:
                 raise ValueError('unrecognized object data type: {val}'.format(val=object_type_value))
-            
+
             # add couple more attributes necessary for AA and correct data processing
             if has_attribute(item,'IsSystem'):
                 if item.IsSystem:
@@ -495,11 +507,11 @@ class MDMDocument:
             result_item['attributes'] = attributes_upd
 
             return [result_item] + result_other_items
-        
+
         except Exception as e:
             print('failed when processing inner field fields from "{name}"'.format(name=item_name),file=sys.stderr)
             raise e
-    
+
     def __read_routing(self):
 
         try:
@@ -514,15 +526,15 @@ class MDMDocument:
                 result.append({'name':routing_part,'label':val})
 
             return result
-        
+
         except Exception as e:
             print('failed when processing routing',file=sys.stderr)
             raise e
-    
+
     def __read_mdm_item_properties(self,item):
 
         try:
-            
+
             document = self.__document
             config = self.__config
             result_properties = []
@@ -562,7 +574,7 @@ class MDMDocument:
             for prop_name in properties_list:
                 result_properties.append({ 'name': prop_name, 'value': properties[prop_name] })
             return result_properties
-        
+
         except Exception as e:
             itemname = '{n}'.format(n=item)
             try:
@@ -620,8 +632,8 @@ class MDMDocument:
                     print('Failed when processing element or category: {cat}'.format(cat='{e}'.format(e=cat)[:31]),file=sys.stderr)
                 raise e
         return result
-            
-    
+
+
     def __read_mdm_item(self,item):
 
         item_name = '{name}'.format(name=item.Name)
@@ -666,7 +678,7 @@ class MDMDocument:
                 else:
                     raise AttributeError('unrecognized feature type: {feature_type}'.format(feature_type=read_feature))
             return result
-        
+
         except Exception as e:
             print('failed when processing "{name}"'.format(name=item_name),file=sys.stderr)
             raise e
@@ -732,7 +744,7 @@ def entry_point(config={}):
             inp_mdd = '{inp_mdd}'.format(inp_mdd=inp_mdd.resolve())
         else:
             raise FileNotFoundError('Inp source: file not provided; please use --mdd')
-        
+
         if not(Path(inp_mdd).is_file()):
             raise FileNotFoundError('file not found: {fname}'.format(fname=inp_mdd))
 
@@ -765,7 +777,7 @@ def entry_point(config={}):
         with MDMDocument(inp_mdd,method,config) as doc:
 
             result = doc.read()
-            
+
             result_json = json.dumps(result, indent=4)
             result_json_fname = ( Path(inp_mdd).parents[0] / '{basename}{ext}'.format(basename=Path(inp_mdd).name,ext='.json') if Path(inp_mdd).is_file() else re.sub(r'^\s*?(.*?)\s*?$',lambda m: '{base}{added}'.format(base=m[1],added='.json'),'{path}'.format(path=inp_mdd)) )
             print('MDM read script: saving as "{fname}"'.format(fname=result_json_fname))
@@ -798,4 +810,3 @@ def entry_point(config={}):
 
 if __name__ == '__main__':
     entry_point({'arglist_strict':True})
-
