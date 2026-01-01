@@ -584,12 +584,12 @@ class MDMDocument:
             print('failed when making a list of properties of {itemname}'.format(itemname=itemname),file=sys.stderr)
             raise e
 
+
     def __list_categories(self,item):
-        result = []
         config = self.__config
-        nested = None
+        item_elements = None
         try:
-            nested = item.Elements
+            item_elements = item.Elements
         except AttributeError as e:
             item_name = '<unknown>'
             try:
@@ -597,41 +597,41 @@ class MDMDocument:
             except:
                 pass
             raise self.__class__.ErrorItemNotIterable('Can\'t iterate over elements in "{catname}"'.format(catname=item_name)) from e
-        for cat in item.Elements:
+        for cat in item_elements:
             try:
                 if cat.IsReference:
                     if 'config_sharedlists_listcats_stepinto' in config and config['config_sharedlists_listcats_stepinto']:
                         try:
                             sl_name_clean = re.sub(r'[\^\\/\.]','',cat.ReferenceName,flags=re.I|re.DOTALL)
                             mdmsharedlist = item.Document.Types[sl_name_clean]
-                            result.extend(self.__list_categories(mdmsharedlist))
+                            yield from self.__list_categories(mdmsharedlist)
                         except Exception as e:
                             raise Exception('Was not able to refer to a Shared List "{l}": {e}'.format(l=cat.ReferenceName,e=e)) from e
                     else:
                         try:
                             sl_name_clean = re.sub(r'[\^\\/\.]','',cat.ReferenceName,flags=re.I|re.DOTALL)
                             mdmsharedlist = item.Document.Types[sl_name_clean]
-                            result.append(mdmsharedlist)
+                            yield mdmsharedlist
                         except Exception as e:
                             raise Exception('Was not able to refer to a Shared List "{l}": {e}'.format(l=cat.ReferenceName,e=e)) from e
                 elif cat.Type==0:
-                    result.append(cat)
-                elif cat.Type==13:
-                    result.extend(self.__list_categories(cat))
+                    yield cat
+                elif (cat.Type==1) or (cat.Type==13):
+                    # yield cat
+                    yield from self.__list_categories(cat)
                 elif (cat.Type==4097) or (re.match(r'^\s*?\d+\s*?$','{s}'.format(s=cat.Name),flags=re.I|re.DOTALL)):
-                    result.append(cat)
+                    yield cat
                 else:
                     try:
-                        result.extend(self.__list_categories(cat))
+                        yield from self.__list_categories(cat)
                     except self.__class__.ErrorItemNotIterable:
-                        result.append(cat)
+                        yield cat
             except Exception as e:
                 try:
                     print('Failed when processing element or category: {cat}'.format(cat=cat.Name),file=sys.stderr)
                 except:
                     print('Failed when processing element or category: {cat}'.format(cat='{e}'.format(e=cat)[:31]),file=sys.stderr)
                 raise e
-        return result
 
 
     def __read_mdm_item(self,item):
