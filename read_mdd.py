@@ -685,7 +685,7 @@ class MDMDocument:
 
 
 
-def entry_point(config={}):
+def entry_point(*argcs,**kwargs):
     try:
         time_start = datetime.now()
         parser = argparse.ArgumentParser(
@@ -732,12 +732,12 @@ def entry_point(config={}):
             choices = ["stepinto","stepover"],
             required=False
         )
-        args = None
-        args_rest = None
-        if( ('arglist_strict' in config) and (not config['arglist_strict']) ):
-            args, args_rest = parser.parse_known_args()
-        else:
-            args = parser.parse_args()
+        # args = None
+        # args_rest = None
+        # if( ('arglist_strict' in config) and (not config['arglist_strict']) ):
+        #     args, args_rest = parser.parse_known_args()
+        # else:
+        args = parser.parse_args(*argcs,**kwargs)
         inp_mdd = None
         if args.mdd:
             inp_mdd = Path(args.mdd)
@@ -809,4 +809,4 @@ def entry_point(config={}):
 
 
 if __name__ == '__main__':
-    entry_point({'arglist_strict':True})
+    entry_point()
