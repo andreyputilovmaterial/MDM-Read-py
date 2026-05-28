@@ -1,3 +1,6 @@
 [submodule "src/lib/MDM-HTMLReport-py"]
 	path = src/lib/mdmreportpy
 	url = https://github.com/andreyputilovmaterial/MDM-HTMLReport-py.git
+[submodule "src_dev_build/lib/pinliner"]
+	path = src_dev_build/lib/pinliner
+	url = https://github.com/The-city-not-present/pinliner.git
