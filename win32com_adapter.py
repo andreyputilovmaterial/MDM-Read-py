@@ -1,5 +1,16 @@
 import sys
 
+
+
+# STDOUT_COLOR_RED = "\033[91m"
+STDOUT_COLOR_RED = "\033[31m"
+STDOUT_COLOR_RESET = "\033[0m"
+STDOUT_COLOR_GREEN = "\033[32m"
+
+
+
+
+
 class Win32ComUnavailable(RuntimeError):
     pass
 
@@ -28,10 +39,10 @@ class Win32Client:
                 # raise Win32ComUnavailable(
                 #     "Please install pywin32 module; win32.client is required on Windows but could not be imported"
                 # ) from cls._import_error
-                print('Please install pywin32 module; win32.client is required on Windows but could not be imported',file=sys.stderr)
+                print(f'{STDOUT_COLOR_RED}Please install pywin32 module; win32.client is required on Windows but could not be imported{STDOUT_COLOR_RESET}',file=sys.stderr)
                 raise cls._import_error
             else:
-                print('COM is not supported on this platform',file=sys.stderr)
+                print(f'{STDOUT_COLOR_RED}COM is not supported on this platform{STDOUT_COLOR_RESET}',file=sys.stderr)
                 # raise Win32ComUnavailable(
                 #     "COM is not supported on this platform"
                 # ) from cls._import_error

@@ -1,3 +1,3 @@
-[submodule "lib/MDM-HTMLReport-py"]
-	path = lib/mdmreportpy
+[submodule "src/lib/MDM-HTMLReport-py"]
+	path = src/lib/mdmreportpy
 	url = https://github.com/andreyputilovmaterial/MDM-HTMLReport-py.git
