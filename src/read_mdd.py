@@ -13,12 +13,15 @@ import traceback, sys
 # from win32com_adapter import Win32Client
 if __name__ == '__main__':
     # run as a program
+    from GENERATED._VERSION import _VERSION as script_version
     from win32com_adapter import Win32Client
 elif '.' in __name__:
     # package
+    from .GENERATED._VERSION import _VERSION as script_version
     from .win32com_adapter import Win32Client
 else:
     # included with no parent package
+    from GENERATED._VERSION import _VERSION as script_version
     from win32com_adapter import Win32Client
 
 
@@ -133,7 +136,7 @@ class MDMDocument:
     # actually the main method of this class
     # reads the entire MDD and return it as a "report"
     # return type is dict that is suitable to be saved or sent as json
-    def read(self):
+    def read(self,config={}):
 
         # prep some variables - list of languages, list of features, columns, etc
         translations_list = [ '{langcode}'.format(langcode=langcode) for langcode in self.__document.Languages ]
@@ -168,6 +171,7 @@ class MDMDocument:
             'report_datetime_local': self.__read_datetime.strftime('%Y-%m-%dT%H:%M:%SZ'),
             'source_file_metadata': [
                 { 'name': 'MDD', 'value': '{path}'.format(path=self.__mdd_path) },
+                { 'name': 'generated with mdmtoolsap-mddread script version', 'value': f'{config.get("script_version")}' },
             ],
             'report_scheme': {
                 'columns': columns_list,
@@ -686,6 +690,7 @@ class MDMDocument:
 
 
 def entry_point(*argcs,**kwargs):
+    script_name = 'MDD read script'
     try:
         time_start = datetime.now()
         parser = argparse.ArgumentParser(
@@ -751,6 +756,9 @@ def entry_point(*argcs,**kwargs):
         method = '{arg}'.format(arg=args.method) if args.method else 'open'
 
         config = {
+            'script_name': script_name,
+            'script_started': time_start,
+            'script_version': script_version.strip(),
             # 'features': ['label','attributes','properties','translations'], # ,'scripting'],
             'features': ['label','attributes','properties','translations','scripting'],
             'sections': ['languages','shared_lists','fields','pages','routing'],
@@ -772,20 +780,21 @@ def entry_point(*argcs,**kwargs):
             else:
                 raise argparse.ArgumentError('config value not recognized: --config-sharedlists-listcats == "{v}" (should be "stepinto" or "stepover")'.format(v=val))
 
-        print('MDM read script: script started at {dt}'.format(dt=time_start))
+        print(f'{script_name}: script started at {time_start}')
+        print(f'{script_name}: MDD: {inp_mdd}')
 
         with MDMDocument(inp_mdd,method,config) as doc:
 
-            result = doc.read()
+            result = doc.read(config)
 
             result_json = json.dumps(result, indent=4)
             result_json_fname = ( Path(inp_mdd).parents[0] / '{basename}{ext}'.format(basename=Path(inp_mdd).name,ext='.json') if Path(inp_mdd).is_file() else re.sub(r'^\s*?(.*?)\s*?$',lambda m: '{base}{added}'.format(base=m[1],added='.json'),'{path}'.format(path=inp_mdd)) )
-            print('MDM read script: saving as "{fname}"'.format(fname=result_json_fname))
+            print(f'{script_name}: saving as "{result_json_fname}"')
             with open(result_json_fname, "w") as outfile:
                 outfile.write(result_json)
 
         time_finish = datetime.now()
-        print('MDM read script: finished at {dt} (elapsed {duration})'.format(dt=time_finish,duration=time_finish-time_start))
+        print(f'{script_name}: finished at {time_finish} (elapsed {time_finish-time_start})')
     except Exception as e:
         # for pretty-printing any issues that happened during runtime; if we hit FileNotFound I don't appreciate when a log traceback is shown, the error should be simple and clear
         # the program is designed to be user-friendly
