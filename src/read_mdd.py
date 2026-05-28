@@ -8,6 +8,8 @@ import json
 import traceback, sys
 
 
+
+
 # # import pythoncom
 # import win32com.client
 # from win32com_adapter import Win32Client
@@ -23,6 +25,16 @@ else:
     # included with no parent package
     from GENERATED._VERSION import _VERSION as script_version
     from win32com_adapter import Win32Client
+
+
+
+
+# STDOUT_COLOR_RED = "\033[91m"
+STDOUT_COLOR_RED = "\033[31m"
+STDOUT_COLOR_RESET = "\033[0m"
+STDOUT_COLOR_GREEN = "\033[32m"
+
+
 
 
 
@@ -232,15 +244,15 @@ class MDMDocument:
                     result.append(result_part)
                 except Exception as e:
                     try:
-                        print('Failed when processing language {e}'.format(e=item.Name),file=sys.stderr)
+                        print(f'{STDOUT_COLOR_RED}Failed when processing language {item.Name}{STDOUT_COLOR_RESET}',file=sys.stderr)
                     except:
-                        print('Failed when processing language {e}'.format(e='{e}'.format(e=item)[:31]),file=sys.stderr)
+                        print(f'{STDOUT_COLOR_RED}Failed when processing language {f"{item}"[:31]}{STDOUT_COLOR_RESET}',file=sys.stderr)
                     raise e
 
             return result
 
         except Exception as e:
-            print('failed when processing languages',file=sys.stderr)
+            print(f'{STDOUT_COLOR_RED}failed when processing languages{STDOUT_COLOR_RESET}',file=sys.stderr)
             raise e
 
     def __read_sharedlists(self):
@@ -277,21 +289,21 @@ class MDMDocument:
                             result.append( element_item )
                         except Exception as e:
                             try:
-                                print('Failed when processing category {e}'.format(e=cat.Name),file=sys.stderr)
+                                print(f'{STDOUT_COLOR_RED}Failed when processing category {cat.Name}{STDOUT_COLOR_RESET}',file=sys.stderr)
                             except:
-                                print('Failed when processing category {e}'.format(e='{e}'.format(e=cat)[:31]),file=sys.stderr)
+                                print(f'{STDOUT_COLOR_RED}Failed when processing category {f"{cat}"[:31]}{STDOUT_COLOR_RESET}',file=sys.stderr)
                             raise e
                 except Exception as e:
                     try:
-                        print('Failed when processing shared list {e}'.format(e=item.Name),file=sys.stderr)
+                        print(f'{STDOUT_COLOR_RED}Failed when processing shared list {item.Name}{STDOUT_COLOR_RESET}',file=sys.stderr)
                     except:
-                        print('Failed when processing shared list {e}'.format(e='{e}'.format(e=sl_name)[:31]),file=sys.stderr)
+                        print(f'{STDOUT_COLOR_RED}Failed when processing shared list {f"{sl_name}"[:31]}{STDOUT_COLOR_RESET}',file=sys.stderr)
                     raise e
 
             return result
 
         except Exception as e:
-            print('failed when processing shared lists',file=sys.stderr)
+            print(f'{STDOUT_COLOR_RED}failed when processing shared lists{STDOUT_COLOR_RESET}',file=sys.stderr)
             raise e
 
     def __read_pages(self):
@@ -326,21 +338,21 @@ class MDMDocument:
                             result.append(item_add)
                         except Exception as e:
                             try:
-                                print('Failed when processing page entry {e}'.format(e=cat.Name),file=sys.stderr)
+                                print(f'{STDOUT_COLOR_RED}Failed when processing page entry {cat.Name}{STDOUT_COLOR_RESET}',file=sys.stderr)
                             except:
-                                print('Failed when processing page entry {e}'.format(e='{e}'.format(e=cat)[:31]),file=sys.stderr)
+                                print(f'{STDOUT_COLOR_RED}Failed when processing page entry {f"{cat}"[:31]}{STDOUT_COLOR_RESET}',file=sys.stderr)
                             raise e
                 except Exception as e:
                     try:
-                        print('Failed when processing page {e}'.format(e=item.Name),file=sys.stderr)
+                        print(f'{STDOUT_COLOR_RED}Failed when processing page {item.Name}{STDOUT_COLOR_RESET}',file=sys.stderr)
                     except:
-                        print('Failed when processing page {e}'.format(e='{e}'.format(e=item_name)[:31]),file=sys.stderr)
+                        print(f'{STDOUT_COLOR_RED}Failed when processing page {f"{item_name}"[:31]}{STDOUT_COLOR_RESET}',file=sys.stderr)
                     raise e
 
             return result
 
         except Exception as e:
-            print('failed when processing pages',file=sys.stderr)
+            print(f'{STDOUT_COLOR_RED}failed when processing pages{STDOUT_COLOR_RESET}',file=sys.stderr)
             raise e
 
     def __read_fields(self,fields):
@@ -361,15 +373,15 @@ class MDMDocument:
 
                 except Exception as e:
                     try:
-                        print('Failed when processing mdm field {e}'.format(e=item.Name),file=sys.stderr)
+                        print(f'{STDOUT_COLOR_RED}Failed when processing mdm field {item.Name}{STDOUT_COLOR_RESET}',file=sys.stderr)
                     except:
-                        print('Failed when processing mdm field {e}'.format(e='{e}'.format(e=item_name)[:31]),file=sys.stderr)
+                        print(f'{STDOUT_COLOR_RED}Failed when processing mdm field {f"{item_name}"[:31]}{STDOUT_COLOR_RESET}',file=sys.stderr)
                     raise e
 
             return result
 
         except Exception as e:
-            print('failed when processing fields',file=sys.stderr)
+            print(f'{STDOUT_COLOR_RED}failed when processing fields{STDOUT_COLOR_RESET}',file=sys.stderr)
             raise e
 
     def __read_process_field(self,item):
@@ -513,7 +525,7 @@ class MDMDocument:
             return [result_item] + result_other_items
 
         except Exception as e:
-            print('failed when processing inner field fields from "{name}"'.format(name=item_name),file=sys.stderr)
+            print(f'{STDOUT_COLOR_RED}failed when processing inner field fields from "{item_name}"{STDOUT_COLOR_RESET}',file=sys.stderr)
             raise e
 
     def __read_routing(self):
@@ -532,7 +544,7 @@ class MDMDocument:
             return result
 
         except Exception as e:
-            print('failed when processing routing',file=sys.stderr)
+            print(f'{STDOUT_COLOR_RED}failed when processing routing{STDOUT_COLOR_RESET}',file=sys.stderr)
             raise e
 
     def __read_mdm_item_properties(self,item):
@@ -585,7 +597,7 @@ class MDMDocument:
                 itemname = item.Name
             except:
                 pass
-            print('failed when making a list of properties of {itemname}'.format(itemname=itemname),file=sys.stderr)
+            print(f'{STDOUT_COLOR_RED}failed when making a list of properties of {itemname}{STDOUT_COLOR_RESET}',file=sys.stderr)
             raise e
 
 
@@ -632,9 +644,9 @@ class MDMDocument:
                         yield cat
             except Exception as e:
                 try:
-                    print('Failed when processing element or category: {cat}'.format(cat=cat.Name),file=sys.stderr)
+                    print(f'{STDOUT_COLOR_RED}Failed when processing element or category: {cat.Name}{STDOUT_COLOR_RESET}',file=sys.stderr)
                 except:
-                    print('Failed when processing element or category: {cat}'.format(cat='{e}'.format(e=cat)[:31]),file=sys.stderr)
+                    print(f'{STDOUT_COLOR_RED}Failed when processing element or category: {cat}{STDOUT_COLOR_RESET}',file=sys.stderr)
                 raise e
 
 
@@ -684,7 +696,7 @@ class MDMDocument:
             return result
 
         except Exception as e:
-            print('failed when processing "{name}"'.format(name=item_name),file=sys.stderr)
+            print(f'{STDOUT_COLOR_RED}failed when processing "{item_name}"{STDOUT_COLOR_RESET}',file=sys.stderr)
             raise e
 
 
@@ -789,7 +801,7 @@ def entry_point(*argcs,**kwargs):
 
             result_json = json.dumps(result, indent=4)
             result_json_fname = ( Path(inp_mdd).parents[0] / '{basename}{ext}'.format(basename=Path(inp_mdd).name,ext='.json') if Path(inp_mdd).is_file() else re.sub(r'^\s*?(.*?)\s*?$',lambda m: '{base}{added}'.format(base=m[1],added='.json'),'{path}'.format(path=inp_mdd)) )
-            print(f'{script_name}: saving as "{result_json_fname}"')
+            print(f'{script_name}: {STDOUT_COLOR_GREEN}saving as "{result_json_fname}"{STDOUT_COLOR_RESET}')
             with open(result_json_fname, "w") as outfile:
                 outfile.write(result_json)
 
@@ -810,9 +822,9 @@ def entry_point(*argcs,**kwargs):
         print('',file=sys.stderr)
         print('',file=sys.stderr)
         print('',file=sys.stderr)
-        print('Error:',file=sys.stderr)
+        print(f'{STDOUT_COLOR_RED}Error:{STDOUT_COLOR_RESET}',file=sys.stderr)
         print('',file=sys.stderr)
-        print('{e}'.format(e=e),file=sys.stderr)
+        print('{STDOUT_COLOR_RED}{e}{STDOUT_COLOR_RESET}',file=sys.stderr)
         print('',file=sys.stderr)
         exit(1)
 
