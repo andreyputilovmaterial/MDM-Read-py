@@ -183,7 +183,7 @@ class MDMDocument:
             'report_datetime_local': self.__read_datetime.strftime('%Y-%m-%dT%H:%M:%SZ'),
             'source_file_metadata': [
                 { 'name': 'MDD', 'value': '{path}'.format(path=self.__mdd_path) },
-                { 'name': 'generated with mdmtoolsap-mddread script version', 'value': f'{config.get("script_version")}' },
+                { 'name': 'generated with mdmtoolsap-mddread script version', 'value': f'{config.get("script_version")}', 'role':'sronly' },
             ],
             'report_scheme': {
                 'columns': columns_list,
