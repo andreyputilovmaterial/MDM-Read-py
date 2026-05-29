@@ -627,7 +627,8 @@ class MDMDocument:
                         try:
                             sl_name_clean = re.sub(r'[\^\\/\.]','',cat.ReferenceName,flags=re.I|re.DOTALL)
                             mdmsharedlist = item.Document.Types[sl_name_clean]
-                            yield mdmsharedlist
+                            # yield mdmsharedlist # <- we don't need shared list scripts printed as cat element; we should return cat, not shared list
+                            yield cat
                         except Exception as e:
                             raise Exception('Was not able to refer to a Shared List "{l}": {e}'.format(l=cat.ReferenceName,e=e)) from e
                 elif cat.Type==0:
@@ -659,6 +660,23 @@ class MDMDocument:
             result = {
                 'name': item_name
             }
+            is_shared_list = None
+            mdmsharedlist = None
+            try:
+                is_shared_list = item.IsReference
+                ref_name = None
+                try:
+                    ref_name = f'{item.ReferenceName}'
+                except AttributeError:
+                    pass
+                sl_name_clean = None
+                if ref_name:
+                    sl_name_clean = re.sub(r'[\^\\/\.]','',ref_name,flags=re.I|re.DOTALL)
+                if sl_name_clean:
+                    mdmsharedlist = item.Document.Types[sl_name_clean]
+                    result['name'] = mdmsharedlist.Name
+            except AttributeError:
+                pass
 
             config = self.__config
             #document = self.__document
