@@ -255,7 +255,8 @@ class MDMDocument:
             if col in std_col_labels:
                 result['report_scheme']['column_headers'][col] = std_col_labels[col]
             if re.match(r'^\s*?langcode-',col):
-                result['report_scheme']['column_headers'][col] = f"{std_col_labels['translations']}{re.sub(r'^\s*?langcode-','',col)}"
+                langcode = re.sub(r'^\s*?langcode-', '', col)
+                result['report_scheme']['column_headers'][col] = f"{std_col_labels['translations']}{langcode}"
         for section_name in self.__config['sections']:
             section_content = None
             if False:
