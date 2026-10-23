@@ -744,25 +744,25 @@ def entry_point(*argcs,**kwargs):
         )
         parser.add_argument(
             '--config-features',
-            help='Config: list features (default is label,properties,translations)',
+            help='Comma-separated list of content kinds to process and include in the output JSON (each becomes one or more columns): label, attributes, properties, translations, scripting. Default: label,attributes,properties,translations,scripting',
             type=str,
             required=False
         )
         parser.add_argument(
             '--config-contexts',
-            help='Config: list contexts (default is Question,Analysis)',
+            help='Comma-separated list of contexts used when reading custom properties. Default: Question,Analysis',
             type=str,
             required=False
         )
         parser.add_argument(
             '--config-sections',
-            help='Config: list sections (default is languages,shared_lists,fields,pages,routing)',
+            help='Comma-separated list of document parts to include in the output JSON: languages, shared_lists, fields, pages, routing. Default: languages,shared_lists,fields,pages,routing',
             type=str,
             required=False
         )
         parser.add_argument(
             '--config-sharedlists-listcats',
-            help='Config: should we list all categories when a shared list is referenced, or just print a shared list name ("stepinto" or "stepover")',
+            help='How to handle a field that references a shared list instead of listing its own categories/elements: "stepinto" expands the shared list into its full list of categories/elements; "stepover" prints only the reference to the shared list. Both are useful depending on the consumer. Default: stepinto',
             type=str,
             choices = ["stepinto","stepover"],
             required=False
