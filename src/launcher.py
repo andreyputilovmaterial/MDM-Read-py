@@ -1,3 +1,9 @@
+"""Universal dispatcher that routes ``--program`` to the right entry point.
+
+Used both during development and from the pinliner bundle (``launcher.main()``).
+"""
+
+
 
 import argparse
 # from pathlib import Path
@@ -68,6 +74,7 @@ run_programs = {
 
 
 def main():
+    """Parse ``--program`` and run the matching handler, formatting errors for users."""
     try:
         parser = argparse.ArgumentParser(
             description="Universal caller of mdmtoolsap-py utilities"

@@ -81,11 +81,21 @@ Cell values are flat: `attributes` and `properties` are property lists
   imports `win32com` directly. The import is lazy: the module can be imported on
   non-Windows machines for inspection/testing, and fails early with a readable message
   only when an MDD is actually opened.
-- **"open" and "join" both supported** (`MDM.Document.Open` vs `.Join`) because both
-  are used elsewhere in the ecosystem (FileTrimmer/PrepData use `join`); neither is
-  clearly better, so the method is a config/CLI option.
+- **"open" and "join" both supported** (`MDM.Document.Open` vs `.Join`):
+    - `open` is simpler and usually keeps the normal label representation in the
+      "Scripts" view, but it opens the file exclusively (blocking) and may fail if the
+      file is already in use.
+    - `join` creates a new empty document and merges the opened document into it. It
+      brings in everything the same way, but in the ".Script" view labels often
+      disappear (they live in a different context) — only relevant for `.Script`
+      outputs, not this reader. It does not require exclusive access, so it is a more
+      stable fallback.
+    - Default is `open`; `join` is equally legitimate.
 - **Config is a plain dict** with defaults (`features`, `sections`, `contexts`); the CLI
   maps `--config-*` arguments onto it. Not over-validated (stays python-ish).
+- **Translations are read via the `Question` context.** Translation overlays are often
+  trimmed/removed once a project reaches the data-processing/Analysis stage, so the
+  `Question` context is the primary (safe) source for `langcode-*` values.
 - **Flattening.** The MDM object model is deeply nested (fields → elements →
   categories → subfields → helper fields). The reader flattens it into a flat list of
   rows with dotted names so the JSON has a uniform, table-friendly shape and can be
@@ -104,7 +114,7 @@ Cell values are flat: `attributes` and `properties` are property lists
    the CLI. Accepted for now; a natural split is (a) COM adapter, (b) document
    traversal → plain dict, (c) CLI. Not urgent.
 3. **Dead code** — line 46 (`'label','attributes','properties','translations',...`)
-   is a bare tuple expression that does nothing. Remove opportunistically.
+   is a bare tuple expression that does nothing. *(Removed 2026-10-23.)*
 4. **Config defaults duplicated** — once in `MDMDocument.__init__` (`config_default`)
    and again in `entry_point`. Keep in sync; consider a single source of truth.
 5. **Category traversal relies on MDM internals** (`item.Elements`, `cat.Type`,
@@ -114,6 +124,25 @@ Cell values are flat: `attributes` and `properties` are property lists
 6. **`translations` feature** initializes the cell to `'???'` and only overwrites it in
    a try/except — on COM failure the cell becomes the exception text. Intentional
    (never silently drop a language), but worth a review.
+
+### Applied code improvements (2026-10-23)
+
+- Modernized the remaining `'{x}'.format(x=...)` calls to f-strings across
+  `read_mdd.py` (no behavioral change intended).
+- Replaced the mutable `config={}` default arguments with `config=None` + normalize in
+  `MDMDocument.__init__` and `read`.
+- Removed the broken `argparse.ArgumentError(...)` call (it was missing the required
+  `message` argument); with `choices=["stepinto","stepover"]` the value is now validated
+  by argparse, so the redundant `if/elif/else` collapsed to a single boolean assignment.
+- Fixed the `unrecognized section type` error to report `section_name` (it was reporting
+  the unset `section_content`).
+- Removed the stray `'label','attributes',...` module-level tuple.
+- Not yet tested against real MDDs (no Windows / MDM server available); review before
+  release.
+- Added module/class/method docstrings to `read_mdd.py`, `win32com_adapter.py` and
+  `launcher.py`.
+- Clarified `open` vs `join` semantics and the `contexts` (Question/Analysis) meaning
+  across comments, docstrings and docs.
 
 ## 7. Roadmap
 
@@ -127,8 +156,8 @@ Cell values are flat: `attributes` and `properties` are property lists
 
 ## 8. Open questions
 
-- `open` vs `join`: which should be the default, and are there MDDs where one fails and
-  the other works?
+- Are there MDDs where `open` fails due to file locking and only `join` works? (`join`
+  is the intended fallback when `open` cannot get exclusive access.)
 - Exact MDM object-model assumptions (element/category `Type` codes, `ReferenceName`
   sanitization) — document them or guard them more defensively.
 - Whether `scripting`/`translations` should ever be omitted vs returning the exception

@@ -62,10 +62,10 @@ the output, not how the file is read.
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--mdd PATH` | (required) | Input MDD file. |
-| `--method open\|join` | `open` | File open method (`MDM.Document.Open` vs `.Join`). |
+| `--method open\|join` | `open` | How to open the file — see "open vs join" below. |
 | `--config-features LIST` | `label,attributes,properties,translations,scripting` | Which kinds of content to process and include in the output (each becomes one or more columns): `label`, `attributes`, `properties`, `translations`, `scripting`. |
 | `--config-sections LIST` | `languages,shared_lists,fields,pages,routing` | Which parts of the document to include in the output: `languages`, `shared_lists`, `fields`, `pages`, `routing`. |
-| `--config-contexts LIST` | `Question,Analysis` | Contexts used when reading custom properties. |
+| `--config-contexts LIST` | `Question,Analysis` | Contexts used when reading labels and custom properties (see below). |
 | `--config-sharedlists-listcats stepinto\|stepover` | `stepinto` | How to treat a field that references a shared list (see below). |
 
 ### Shared lists: "step into" vs "step over"
@@ -83,6 +83,32 @@ When such a reference is encountered, the reader can either:
 
 Both modes are useful and both are necessary, depending on what the consumer needs, so
 it is left configurable. There is no single "correct" default.
+
+### `open` vs `join`
+
+- **`open`** — the default and the more straightforward mode. It usually keeps the
+  normal representation of labels in the "Scripts" view. However, it opens the file
+  exclusively (a blocking operation), so it may fail if the MDD is already open.
+- **`join`** — creates a new empty document and merges the opened document into it. It
+  technically brings in everything (definitions, questions, labels, …), and for a deep
+  recursive read with explicit contexts it makes little difference vs `open`. It does
+  not require exclusive access, so it is a more stable fallback when `open` fails. One
+  caveat: in the ".Script" view labels often disappear with `join` (they live in a
+  different context), but that only affects `.Script`-style outputs, not this reader.
+
+### Contexts (`--config-contexts`)
+
+Contexts (usually `Question` and `Analysis`) apply to **labels as well as custom
+properties**:
+
+- `Question` usually holds the question text with formatting (HTML tags).
+- `Analysis` usually holds cleaned labels for data processing/analysis — often
+  significantly shortened, since SPSS users dislike long strings, variable names and
+  labels.
+
+Translation overlays are read through the `Question` context: they are often trimmed or
+removed once a project reaches the data-processing/Analysis stage, so `Question` is the
+primary (safe) source.
 
 ## Output JSON shape
 

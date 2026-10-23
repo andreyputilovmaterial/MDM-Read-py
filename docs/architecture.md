@@ -64,8 +64,15 @@ The CLI `--config-*` options control **which parts are written to the output JSO
 | --- | --- | --- |
 | `--config-features` | `label,attributes,properties,translations,scripting` | Which kinds of content to process and include (each becomes one or more columns). |
 | `--config-sections` | `languages,shared_lists,fields,pages,routing` | Which document parts to include. |
-| `--config-contexts` | `Question,Analysis` | Contexts used when reading custom properties. |
+| `--config-contexts` | `Question,Analysis` | Contexts used when reading labels and custom properties. |
 | `--config-sharedlists-listcats` | `stepinto` | `stepinto` or `stepover` (see below). |
+
+Contexts (`--config-contexts`, usually `Question` and `Analysis`) apply to **labels as
+well as custom properties**. `Question` usually holds the question text with formatting
+(HTML tags); `Analysis` usually holds cleaned labels — often significantly shortened —
+for data processing/analysis (SPSS users dislike long strings, variable names and
+labels). Translation overlays are read through the `Question` context, since they are
+often trimmed or removed once a project reaches the data-processing/Analysis stage.
 
 ## 5. Shared lists: "step into" vs "step over"
 
@@ -88,9 +95,16 @@ it is left configurable; there is no single "correct" default.
   imports `win32com` directly. The import is lazy: the module can be imported on
   non-Windows machines for inspection/testing, and fails early with a readable message
   only when an MDD is actually opened.
-- **"open" and "join" both supported** (`MDM.Document.Open` vs `.Join`) because both
-  are used elsewhere in the ecosystem (FileTrimmer/PrepData use `join`); neither is
-  clearly better, so the method is a config/CLI option.
+- **"open" and "join" both supported** (`MDM.Document.Open` vs `.Join`):
+    - `open` is simpler and usually keeps the normal label representation in the
+      "Scripts" view, but it opens the file exclusively (blocking) and may fail if the
+      file is already in use.
+    - `join` creates a new empty document and merges the opened document into it. It
+      brings in everything the same way, but in the ".Script" view labels often
+      disappear (they live in a different context) — only relevant for `.Script`
+      outputs, not this reader. It does not require exclusive access, so it is a more
+      stable fallback.
+    - Default is `open`; `join` is equally legitimate.
 - **Flattening.** The MDM object model is deeply nested (fields → elements →
   categories → subfields → helper fields). The reader flattens it into a flat list of
   rows with dotted names so the JSON has a uniform, table-friendly shape.
