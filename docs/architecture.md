@@ -26,6 +26,12 @@ JSON "report" shape that is consumed by:
 
 ## 3. Output JSON format
 
+The master definition of the common JSON "report" shape lives in **`mdmreportpy`**
+(`src/lib/mdmreportpy/docs/report-json-format.md`), and the rich-text cell/header
+format in `src/lib/mdmreportpy/docs/rich-text-format.md`. This section describes what
+`mdmreadpy` produces (a producer-specific view); the `mdmreportpy` spec is the source
+of truth for the common shape.
+
 `MDMDocument.read(config)` returns a dict (saved as JSON by `entry_point`):
 
 ```text

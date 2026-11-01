@@ -4,6 +4,8 @@
 > Status: initial capture. Architecture + design decisions + review findings recorded.
 > (2026-11-02) Recorded an open decision on translation column-header wording (see §8).
 > (2026-11-02) Decision: rich-text (`parts`/`role`) is a supported `column_headers` format.
+> (2026-11-02) Source of truth for the report JSON / rich-text format is `mdmreportpy`
+> (`src/lib/mdmreportpy/docs/report-json-format.md`, `.../docs/rich-text-format.md`).
 >
 > **Convention:** read this file at the start of every task and update it at the end,
 > so it stays the permanently updated context of the current work (see
@@ -44,6 +46,11 @@ Hard requirements to actually read an MDD:
 | `src/lib/mdmreportpy/` | Submodule: renders this JSON to HTML. |
 
 ## 4. Output JSON format
+
+The master definition of the common JSON "report" shape lives in **`mdmreportpy`**
+(`src/lib/mdmreportpy/docs/report-json-format.md`), and the rich-text cell/header
+format in `src/lib/mdmreportpy/docs/rich-text-format.md`. This section is a
+producer-specific view; the `mdmreportpy` spec is the source of truth.
 
 `MDMDocument.read(config)` returns a dict (saved as JSON by `entry_point`):
 
@@ -200,7 +207,8 @@ Cell values are flat: `attributes` and `properties` are property lists
 1. **Documentation (this file).** *(this step)*
 2. **Formalize the JSON output spec** and reconcile it with the `mdmreportpy` input
    spec — the output of this package is the input of that one, so they must stay
-   aligned.
+   aligned. The `mdmreportpy` spec (`docs/report-json-format.md`,
+   `docs/rich-text-format.md`) is the source of truth.
 3. **Add tests** around the pure JSON-shaping logic by mocking the COM boundary, plus a
    golden JSON fixture. *(Partial: `row_name_maker` now has unit tests; COM-boundary /
    golden-fixture tests still pending.)*

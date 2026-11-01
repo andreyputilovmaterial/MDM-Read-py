@@ -118,6 +118,12 @@ primary (safe) source.
 
 ## Output JSON shape
 
+> The master definition of the common JSON "report" shape lives in **`mdmreportpy`**
+> (`src/lib/mdmreportpy/docs/report-json-format.md`), and the rich-text cell/header
+> format in `src/lib/mdmreportpy/docs/rich-text-format.md`. This section is a
+> producer-specific view for MDD input; where they differ, the `mdmreportpy` spec is
+> the source of truth.
+
 ```
 {
   "report_type": "MDD",
@@ -175,4 +181,7 @@ single-file `dist/mdmtoolsap_bundle.py`.
 
 - [Architecture & output JSON format](docs/architecture.md) — stable reference for
   developers.
+- **Data format source of truth** — `mdmreportpy`:
+  [`docs/report-json-format.md`](src/lib/mdmreportpy/docs/report-json-format.md) and
+  [`docs/rich-text-format.md`](src/lib/mdmreportpy/docs/rich-text-format.md).
 
