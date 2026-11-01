@@ -1,7 +1,8 @@
 # Project Context — MDD-read-py (`mdmreadpy`)
 
-> Last updated: 2026-11-01
+> Last updated: 2026-11-02
 > Status: initial capture. Architecture + design decisions + review findings recorded.
+> (2026-11-02) Recorded an open decision on translation column-header wording (see §8).
 >
 > **Convention:** read this file at the start of every task and update it at the end,
 > so it stays the permanently updated context of the current work (see
@@ -97,6 +98,13 @@ Cell values are flat: `attributes` and `properties` are property lists
 - **Translations are read via the `Question` context.** Translation overlays are often
   trimmed/removed once a project reaches the data-processing/Analysis stage, so the
   `Question` context is the primary (safe) source for `langcode-*` values.
+- **Translation column headers use the raw language id.** The display title for a
+  `langcode-<lang>` column in `report_scheme.column_headers` is
+  `"Translation overlay <lang>"` (e.g. `"Translation overlay ENU"`), i.e. the id, not the
+  full language name. The full name *is* available — the `languages` section stores
+  `item.LongName` (e.g. `"English (United States)"`), i.e.
+  `document.Languages["ENU"].LongName` — but whether to surface it in headers is an open
+  decision (see §8).
 - **Flattening.** The MDM object model is deeply nested (fields → elements →
   categories → subfields → helper fields). The reader flattens it into a flat list of
   rows with dotted names so the JSON has a uniform, table-friendly shape and can be
@@ -199,4 +207,12 @@ Cell values are flat: `attributes` and `properties` are property lists
   sanitization) — document them or guard them more defensively.
 - Whether `scripting`/`translations` should ever be omitted vs returning the exception
   text on COM failure.
+- **Translation column-header wording.** Today a translation column's header is
+  `"Translation overlay ENU"` (the raw language id). Alternatives considered: the full
+  name (`"Translation overlay English (United States)"`), both
+  (`"Translation overlay ENU (English (United States))"` — awkward double parentheses),
+  or just the language name without the `"Translation overlay"` prefix. Each is
+  reasonable depending on the tool consuming the JSON. Decision: keep the id-only
+  pattern as the default; making it configurable was rejected as too much overhead and
+  complexity. Revisit when a concrete consumer needs it.
 
