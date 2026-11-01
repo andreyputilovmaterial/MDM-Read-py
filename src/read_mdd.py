@@ -29,14 +29,41 @@ if __name__ == '__main__':
     # run as a program
     from GENERATED._VERSION import _VERSION as script_version
     from win32com_adapter import Win32Client
+    from row_name_maker import (
+        ROW_NAME_CONVENTIONS,
+        DEFAULT_ROW_NAME_CONVENTION,
+        DEFAULT_REFERENCE_PREFIX,
+        make_root_name,
+        make_child_name,
+        make_category_name,
+        is_reference,
+    )
 elif '.' in __name__:
     # package
     from .GENERATED._VERSION import _VERSION as script_version
     from .win32com_adapter import Win32Client
+    from .row_name_maker import (
+        ROW_NAME_CONVENTIONS,
+        DEFAULT_ROW_NAME_CONVENTION,
+        DEFAULT_REFERENCE_PREFIX,
+        make_root_name,
+        make_child_name,
+        make_category_name,
+        is_reference,
+    )
 else:
     # included with no parent package
     from GENERATED._VERSION import _VERSION as script_version
     from win32com_adapter import Win32Client
+    from row_name_maker import (
+        ROW_NAME_CONVENTIONS,
+        DEFAULT_ROW_NAME_CONVENTION,
+        DEFAULT_REFERENCE_PREFIX,
+        make_root_name,
+        make_child_name,
+        make_category_name,
+        is_reference,
+    )
 
 
 
@@ -170,6 +197,8 @@ class MDMDocument:
             'contexts': ['Question','Analysis']
         }
         self.__config = { **config_default, **config }
+        self.__row_name_convention = self.__config.get('config_row_name_convention', DEFAULT_ROW_NAME_CONVENTION)
+        self.__reference_prefix = self.__config.get('config_row_name_reference_prefix', DEFAULT_REFERENCE_PREFIX)
 
 
 
@@ -212,7 +241,11 @@ class MDMDocument:
         # prep some variables - list of languages, list of features, columns, etc
         translations_list = [ f'{langcode}' for langcode in self.__document.Languages ]
         self.__translations = translations_list
-        flags_list = [ 'data-type:mdd', f'mdmreadpy:version:{script_version.strip()}' ]
+        flags_list = [
+            'data-type:mdd',
+            f'mdmreadpy:version:{script_version.strip()}',
+            f'mdmreadpy:config:row-name-convention:{self.__row_name_convention}',
+        ]
         columns_list = ['name']
         for feature_spec in self.__config['features']:
             col_add = None
@@ -347,7 +380,14 @@ class MDMDocument:
                         try:
                             #cat_name = '{name}'.format(name=cat.Name)
                             element_item = self.__read_mdm_item(cat)
-                            element_item['name'] = f"{sl_name}.categories[{element_item['name']}]"
+                            element_item['name'] = make_category_name(
+                                sl_name,
+                                cat,
+                                child_name=element_item['name'],
+                                is_reference=is_reference(cat),
+                                reference_prefix=self.__reference_prefix,
+                                convention=self.__row_name_convention,
+                            )
                             result.append( element_item )
                         except Exception as e:
                             try:
@@ -397,7 +437,7 @@ class MDMDocument:
                         try:
                             #cat_name = '{name}'.format(name=cat.Name)
                             item_add = self.__read_mdm_item(cat)
-                            item_add['name'] = f"{item_name}.{item_add['name']}"
+                            item_add['name'] = make_child_name(item_name, cat, convention=self.__row_name_convention)
                             result.append(item_add)
                         except Exception as e:
                             try:
@@ -448,18 +488,22 @@ class MDMDocument:
             print(f'{STDOUT_COLOR_RED}failed when processing fields{STDOUT_COLOR_RESET}',file=sys.stderr)
             raise e
 
-    def __read_process_field(self,item):
+    def __read_process_field(self,item,parent_name=''):
         """Process one MDM field and return its rows (self plus nested parts).
 
         Dispatches on ``ObjectTypeValue`` (question/array/grid/block/...) and emits
-        nested categories, subfields and helper fields as additional rows with dotted
-        ``name`` prefixes.
+        nested categories, subfields and helper fields as additional rows. Row names are
+        built by the configured row-name convention (see ``row_name_maker``).
         """
 
         def has_attribute(item,attr):
             return attr.lower() in [m.lower() for m in dir(item)]
 
-        item_name = item.Name
+        item_name = (
+            make_root_name(item, convention=self.__row_name_convention)
+            if not parent_name
+            else make_child_name(parent_name, item, convention=self.__row_name_convention)
+        )
         result_other_items = []
         try:
 
@@ -508,7 +552,14 @@ class MDMDocument:
                     result_item['attributes']['maxvalue'] = item.MaxValue
                     for cat in self.__list_categories(item):
                         item_add = self.__read_mdm_item(cat)
-                        item_add['name'] = f"{item_name}.categories[{item_add['name']}]"
+                        item_add['name'] = make_category_name(
+                            item_name,
+                            cat,
+                            child_name=item_add['name'],
+                            is_reference=is_reference(cat),
+                            reference_prefix=self.__reference_prefix,
+                            convention=self.__row_name_convention,
+                        )
                         result_other_items.append(item_add)
                 elif data_type==5:
                     # date
@@ -528,11 +579,18 @@ class MDMDocument:
                 result_item['attributes']['is_grid'] = item.IsGrid
                 for cat in self.__list_categories(item):
                     item_add = self.__read_mdm_item(cat)
-                    item_add['name'] = f"{item_name}.categories[{item_add['name']}]"
+                    item_add['name'] = make_category_name(
+                        item_name,
+                        cat,
+                        child_name=item_add['name'],
+                        is_reference=is_reference(cat),
+                        reference_prefix=self.__reference_prefix,
+                        convention=self.__row_name_convention,
+                    )
                     result_other_items.append(item_add)
                 for cat in item.Fields:
                     #result_item['attributes']['fields'].append(self.__read_process_field(cat))
-                    result_other_items = result_other_items + [ {**item,'name':f"{item_name}.{item['name']}"} for item in self.__read_process_field(cat) ]
+                    result_other_items = result_other_items + self.__read_process_field(cat, parent_name=item_name)
             elif object_type_value==2:
                 # Grid (it seems it's something different than Array, but I can't understand their logic; maybe it's different because it has a different db setup in case data, I don't know)
                 # Execute Error: The '<Object>.IGrid' type does not support the 'categories' property
@@ -548,18 +606,25 @@ class MDMDocument:
                         pass
                 for cat in self.__list_categories(item):
                     item_add = self.__read_mdm_item(cat)
-                    item_add['name'] = f"{item_name}.categories[{item_add['name']}]"
+                    item_add['name'] = make_category_name(
+                        item_name,
+                        cat,
+                        child_name=item_add['name'],
+                        is_reference=is_reference(cat),
+                        reference_prefix=self.__reference_prefix,
+                        convention=self.__row_name_convention,
+                    )
                     result_other_items.append(item_add)
                 for cat in item.Fields:
                     #result_item['attributes']['fields'].append(self.__read_process_field(cat))
-                    result_other_items = result_other_items + [ {**item,'name':f"{item_name}.{item['name']}"} for item in self.__read_process_field(cat) ]
+                    result_other_items = result_other_items + self.__read_process_field(cat, parent_name=item_name)
             elif object_type_value==3:
                 # class (block)
                 result_item['attributes']['type'] = 'block'
                 #result_item['attributes']['fields'] = []
                 for cat in item.Fields:
                     #result_item['attributes']['fields'].append(self.__read_process_field(cat))
-                    result_other_items = result_other_items + [ {**item,'name':f"{item_name}.{item['name']}"} for item in self.__read_process_field(cat) ]
+                    result_other_items = result_other_items + self.__read_process_field(cat, parent_name=item_name)
             elif object_type_value==16:
                 result_item['attributes']['type'] = 'plain/type16'
                 # not sure what is it, an example is Respondent.Serial (in some projects)
@@ -577,7 +642,7 @@ class MDMDocument:
 
             for cat in item.HelperFields:
                 #result_item['attributes']['fields'].append(self.__read_process_field(cat))
-                result_other_helperfields_items = [ {**item,'name':f"{item_name}.{item['name']}"} for item in self.__read_process_field(cat) ]
+                result_other_helperfields_items = self.__read_process_field(cat, parent_name=item_name)
                 # as a result, we can get a collection of items with all nested elements, categories, inner subfields, etc
                 # but the first item is a root item
                 # and it should exist
@@ -854,6 +919,14 @@ def entry_point(*argcs,**kwargs):
             choices = ["stepinto","stepover"],
             required=False
         )
+        parser.add_argument(
+            '--config-row-name-convention',
+            help='How to build the "name" of each row: "ap" composes the parent name + "." + the child name (categories become "Parent.Categories[Cat]", and a stepover shared-list reference becomes "Parent.Categories[@SL_Name]"); "mdm" uses each item\'s FullName as-is, assuming it already contains the full dotted path (placeholder). Default: ap',
+            type=str,
+            choices = list(ROW_NAME_CONVENTIONS.keys()),
+            default = DEFAULT_ROW_NAME_CONVENTION,
+            required=False
+        )
         # args = None
         # args_rest = None
         # if( ('arglist_strict' in config) and (not config['arglist_strict']) ):
@@ -881,6 +954,8 @@ def entry_point(*argcs,**kwargs):
             'sections': ['languages','shared_lists','fields','pages','routing'],
             'contexts': ['Question','Analysis'],
             'config_sharedlists_listcats_stepinto': CONFIG_LISTCAT_STEPINTO_SL,
+            'config_row_name_convention': args.config_row_name_convention,
+            'config_row_name_reference_prefix': DEFAULT_REFERENCE_PREFIX,
         }
         if args.config_features:
             config['features'] = args.config_features.split(',')

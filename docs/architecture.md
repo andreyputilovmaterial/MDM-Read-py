@@ -10,8 +10,10 @@ from user-facing docs.
 JSON "report" shape that is consumed by:
 
 - `mdmreportpy` (the HTML reporter),
+- `mdmexcelreportpy` (the Excel reporter),
+- `MDM-TranslationOverlayHelper` (the translation overlay helper),
 - the diff tool (compares two JSON reports and writes a new JSON report),
-- Excel export and any other consumer of the common JSON shape.
+- and any other consumer of the common JSON shape.
 
 ## 2. Modules
 
@@ -33,7 +35,7 @@ JSON "report" shape that is consumed by:
   report_datetime_utc,
   report_datetime_local,
   source_file_metadata: [ {name, value, role?} ],
-  report_scheme: { columns, column_headers, flags: ["data-type:mdd", "mdmreadpy:version:<version>"] },
+  report_scheme: { columns, column_headers, flags: ["data-type:mdd", "mdmreadpy:version:<version>", "mdmreadpy:config:row-name-convention:<convention>"] },
   sections: [ {name, content: [row, ...]}, ... ]
 }
 ```
@@ -48,7 +50,7 @@ Sections (defaults) and what each row carries:
 - `shared_lists` — shared-list entries (see "Shared lists" below).
 - `fields` — a leading "zero item" (document-level `properties`/`scripting`) followed
   by flattened field rows. Nested categories/elements/subfields/helper fields become
-  additional rows with dotted `name` prefixes (e.g. `Field.categories[Cat]`,
+  additional rows with dotted `name` prefixes (e.g. `Field.Categories[Cat]`,
   `Block.SubField`).
 - `pages` — page rows (and their entries).
 - `routing` — one row carrying the routing script (`name` + `label`).
@@ -66,6 +68,7 @@ The CLI `--config-*` options control **which parts are written to the output JSO
 | `--config-sections` | `languages,shared_lists,fields,pages,routing` | Which document parts to include. |
 | `--config-contexts` | `Question,Analysis` | Contexts used when reading labels and custom properties. |
 | `--config-sharedlists-listcats` | `stepinto` | `stepinto` or `stepover` (see below). |
+| `--config-row-name-convention` | `ap` | `ap` or `mdm` (see "Row name conventions" below). |
 
 Contexts (`--config-contexts`, usually `Question` and `Analysis`) apply to **labels as
 well as custom properties**. `Question` usually holds the question text with formatting
@@ -73,6 +76,26 @@ well as custom properties**. `Question` usually holds the question text with for
 for data processing/analysis (SPSS users dislike long strings, variable names and
 labels). Translation overlays are read through the `Question` context, since they are
 often trimmed or removed once a project reaches the data-processing/Analysis stage.
+
+### Row name conventions
+
+Each row's `name` is its unique identifier. How it is spelled is controlled by
+`--config-row-name-convention` (and the reader config key `config_row_name_convention`):
+
+- **`ap`** (default) — compose the name from parent + `.` + child. Categories become
+  `Parent.Categories[Cat]`. In `stepover` mode a shared-list reference becomes
+  `Parent.Categories[@SL_Name]` (the `@` marks it as a reference; the prefix is
+  configurable through `config_row_name_reference_prefix`, but is intentionally **not**
+  a CLI flag).
+- **`mdm`** (placeholder) — use each item's `FullName` as-is, assuming it already
+  contains the full dotted path. Category / shared-list handling is still under review.
+
+The convention used is recorded in the report's `flags` as
+`mdmreadpy:config:row-name-convention:<convention>`, so consumers can branch on it.
+
+> The `.` separator is significant: the diff tool uses it to group rows hierarchically
+> when comparing MDD reports, and other consumers may rely on it too. Only change the
+> convention if you keep both sides of a diff (and any consumers) aligned.
 
 ## 5. Shared lists: "step into" vs "step over"
 

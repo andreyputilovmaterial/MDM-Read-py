@@ -23,7 +23,12 @@ understands.
 This package is one of several "readers" in the global project. Its JSON output is
 consumed by, among others:
 
-- the HTML report generator (`mdmreportpy`, `report_create.py`),
+- the HTML report generator — `mdmreportpy`
+  (<https://github.com/andreyputilovmaterial/MDM-HTMLReport-py.git>),
+- the Excel report generator — `mdmexcelreportpy`
+  (<https://github.com/andreyputilovmaterial/MDM-ExcelReport-py.git>),
+- the translation overlay helper — `MDM-TranslationOverlayHelper`
+  (<https://github.com/andreyputilovmaterial/MDM-TranslationOverlayHelper.git>),
 - the diff tool, which compares two JSON reports (e.g. two MDDs, or an MDD against a
   translation) and writes a new JSON report that `mdmreportpy` then renders.
 
@@ -67,6 +72,7 @@ the output, not how the file is read.
 | `--config-sections LIST` | `languages,shared_lists,fields,pages,routing` | Which parts of the document to include in the output: `languages`, `shared_lists`, `fields`, `pages`, `routing`. |
 | `--config-contexts LIST` | `Question,Analysis` | Contexts used when reading labels and custom properties (see below). |
 | `--config-sharedlists-listcats stepinto\|stepover` | `stepinto` | How to treat a field that references a shared list (see below). |
+| `--config-row-name-convention ap\|mdm` | `ap` | How row `name`s are built (see "Row name conventions" below). |
 
 ### Shared lists: "step into" vs "step over"
 
@@ -122,7 +128,7 @@ primary (safe) source.
   "report_scheme": {
     "columns": ["name", "label", "attributes", "properties", "scripting", "langcode-..."],
     "column_headers": {...},
-    "flags": ["data-type:mdd", "mdmreadpy:version:<version>"]
+    "flags": ["data-type:mdd", "mdmreadpy:version:<version>", "mdmreadpy:config:row-name-convention:ap"]
   },
   "sections": [
     { "name": "languages",    "content": [...] },
@@ -138,8 +144,25 @@ Each row in `content` is a flat dict keyed by the column ids from
 `report_scheme.columns`. `attributes` and `properties` are property lists
 (`[{"name": ..., "value": ...}, ...]`). Field rows can be nested — categories,
 elements, subfields and helper fields are flattened into additional rows with dotted
-`name` prefixes such as `Field.categories[Cat]`. See `docs/architecture.md` for the
+`name` prefixes such as `Field.Categories[Cat]`. See `docs/architecture.md` for the
 full shape and column/row conventions.
+
+### Row name conventions
+
+The `name` of each row is the row's unique identifier. How it is spelled is controlled
+by `--config-row-name-convention`:
+
+- **`ap`** (default) — compose the name from parent + `.` + child. Categories become
+  `Parent.Categories[Cat]`. In `stepover` mode a shared-list reference becomes
+  `Parent.Categories[@SL_Name]` (the `@` marks it as a reference; the prefix is
+  configurable through the reader config key `config_row_name_reference_prefix`, but on
+  purpose it is **not** exposed as a CLI flag).
+- **`mdm`** (placeholder) — use each item's `FullName` as-is, assuming it already
+  contains the full dotted path. Category / shared-list handling is still under review.
+
+> The `.` separator is significant: the diff tool uses it to group rows hierarchically
+> when comparing MDD reports, and other consumers may rely on it too. Only change the
+> convention if you keep both sides of a diff (and any consumers) aligned.
 
 ## Build
 

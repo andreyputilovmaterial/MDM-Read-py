@@ -37,6 +37,7 @@ Hard requirements to actually read an MDD:
 | --- | --- |
 | `src/read_mdd.py` | `MDMDocument` (open/join, traversal, JSON assembly) + `entry_point` CLI. |
 | `src/win32com_adapter.py` | Lazy `win32com.client` import; `Win32Client.Dispatch`; fail-early errors for non-Windows / missing pywin32. |
+| `src/row_name_maker.py` | Pure row-name builders (`ap` / `mdm` conventions); no COM, unit-testable. |
 | `src/launcher.py` | Dispatcher `--program read_mdd|report|report_html|test|version`. |
 | `src/lib/mdmreportpy/` | Submodule: renders this JSON to HTML. |
 
@@ -51,7 +52,7 @@ Hard requirements to actually read an MDD:
   report_datetime_utc,
   report_datetime_local,
   source_file_metadata: [ {name, value, role?} ],
-  report_scheme: { columns, column_headers, flags: ["data-type:mdd", "mdmreadpy:version:<version>"] },
+  report_scheme: { columns, column_headers, flags: ["data-type:mdd", "mdmreadpy:version:<version>", "mdmreadpy:config:row-name-convention:<convention>"] },
   sections: [ {name, content: [row, ...]}, ... ]
 }
 ```
@@ -67,7 +68,7 @@ Sections (defaults) and what each row carries:
   as-is (`stepover`) via `config_sharedlists_listcats_stepinto`.
 - `fields` — a leading "zero item" (document-level `properties`/`scripting`) followed
   by flattened field rows. Nested categories/elements/subfields/helper fields become
-  additional rows with dotted `name` prefixes (e.g. `Field.categories[Cat]`,
+  additional rows with dotted `name` prefixes (e.g. `Field.Categories[Cat]`,
   `Block.SubField`).
 - `pages` — page rows (and their entries).
 - `routing` — one row carrying the routing script (`name` + `label`).
@@ -157,6 +158,26 @@ Cell values are flat: `attributes` and `properties` are property lists
   `mdmreportpy` variants) to write `_VERSION = repr(<git describe>)` via `python -c`,
   instead of the previous triple-quoted heredoc.
 
+### Applied changes (2026-11-01, row-name convention)
+
+- Extracted row-name building into a new pure module `src/row_name_maker.py` with a
+  `ROW_NAME_CONVENTIONS` registry (`ap`, `mdm`). Added `--config-row-name-convention` (choices
+  driven by `ROW_NAME_CONVENTIONS.keys()`, default `ap`) and recorded the convention in
+  `report_scheme.flags` as `mdmreadpy:config:row-name-convention:<name>`.
+- `ap` now writes categories as `Parent.Categories[Cat]` (capital `C`) and, in
+  `stepover` mode, prefixes shared-list references with `@`
+  (`Parent.Categories[@SL_Name]`); the `@` is configurable via
+  `config_row_name_reference_prefix` but intentionally has no CLI flag.
+- `mdm` is a placeholder: child rows use the item's `FullName` as-is. Category /
+  shared-list behavior still needs review.
+- `__read_process_field` now threads `parent_name` down and builds names through
+  `row_name_maker` instead of post-prefixing recursion results (behavior-preserving for
+  `ap`).
+- Added `tests/test_row_name_maker.py` (stdlib `unittest`, no COM) covering `ap`, `mdm`,
+  references and error cases.
+- Note: the `.` separator is load-bearing — the diff tool groups rows on it, so a
+  non-`ap` convention must be used consistently across both sides of a diff.
+
 ## 7. Roadmap
 
 1. **Documentation (this file).** *(this step)*
@@ -164,8 +185,10 @@ Cell values are flat: `attributes` and `properties` are property lists
    spec — the output of this package is the input of that one, so they must stay
    aligned.
 3. **Add tests** around the pure JSON-shaping logic by mocking the COM boundary, plus a
-   golden JSON fixture.
+   golden JSON fixture. *(Partial: `row_name_maker` now has unit tests; COM-boundary /
+   golden-fixture tests still pending.)*
 4. **Split `read_mdd.py`**, remove dead code (#3), centralize config defaults (#4).
+   *(Partial: row-name building moved to `row_name_maker.py`.)*
 
 ## 8. Open questions
 
