@@ -38,7 +38,7 @@ Hard requirements to actually read an MDD:
 | `src/read_mdd.py` | `MDMDocument` (open/join, traversal, JSON assembly) + `entry_point` CLI. |
 | `src/win32com_adapter.py` | Lazy `win32com.client` import; `Win32Client.Dispatch`; fail-early errors for non-Windows / missing pywin32. |
 | `src/row_name_maker.py` | Pure row-name builders (`ap` / `mdm` conventions); no COM, unit-testable. |
-| `src/launcher.py` | Dispatcher `--program read_mdd|report|report_html|test|version`. |
+| `src/launcher.py` | Dispatcher `--program read_mdd\|report\|report_html\|test\|version`. |
 | `src/lib/mdmreportpy/` | Submodule: renders this JSON to HTML. |
 
 ## 4. Output JSON format

@@ -21,7 +21,7 @@ JSON "report" shape that is consumed by:
 | --- | --- |
 | `src/read_mdd.py` | `MDMDocument` (open/join, traversal, JSON assembly) + `entry_point` CLI. |
 | `src/win32com_adapter.py` | Lazy `win32com.client` import; `Win32Client.Dispatch`; fail-early errors for non-Windows / missing pywin32. |
-| `src/launcher.py` | Dispatcher `--program read_mdd|report|report_html|test|version`. |
+| `src/launcher.py` | Dispatcher `--program read_mdd\|report\|report_html\|test\|version`. |
 | `src/lib/mdmreportpy/` | Submodule: HTML reporter that consumes this JSON. |
 
 ## 3. Output JSON format
