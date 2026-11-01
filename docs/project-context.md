@@ -3,6 +3,7 @@
 > Last updated: 2026-11-02
 > Status: initial capture. Architecture + design decisions + review findings recorded.
 > (2026-11-02) Recorded an open decision on translation column-header wording (see §8).
+> (2026-11-02) Decision: rich-text (`parts`/`role`) is a supported `column_headers` format.
 >
 > **Convention:** read this file at the start of every task and update it at the end,
 > so it stays the permanently updated context of the current work (see
@@ -105,6 +106,13 @@ Cell values are flat: `attributes` and `properties` are property lists
   `item.LongName` (e.g. `"English (United States)"`), i.e.
   `document.Languages["ENU"].LongName` — but whether to surface it in headers is an open
   decision (see §8).
+- **Rich-text column headers are supported (decision).** A
+  `report_scheme.column_headers` value may be a plain string or the same rich-text
+  structure used for cell values (a list of parts, or `{"text": ..., "role": ...}` /
+  `{"parts": [...]}` segments). Consumers must accept the richer form and may filter or
+  style parts by `role`. The reader still emits plain strings today; this decision
+  unblocks richer headers later (e.g. the translation wording in §8) without a format
+  change.
 - **Flattening.** The MDM object model is deeply nested (fields → elements →
   categories → subfields → helper fields). The reader flattens it into a flat list of
   rows with dotted names so the JSON has a uniform, table-friendly shape and can be
@@ -214,5 +222,7 @@ Cell values are flat: `attributes` and `properties` are property lists
   or just the language name without the `"Translation overlay"` prefix. Each is
   reasonable depending on the tool consuming the JSON. Decision: keep the id-only
   pattern as the default; making it configurable was rejected as too much overhead and
-  complexity. Revisit when a concrete consumer needs it.
+  complexity. Revisit when a concrete consumer needs it. Rich-text `column_headers`
+  (see §5) are now a supported format, so a wording choice could be expressed as parts
+  with `role`s rather than a single flat string.
 

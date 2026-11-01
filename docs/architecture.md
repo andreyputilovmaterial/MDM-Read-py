@@ -58,6 +58,13 @@ Sections (defaults) and what each row carries:
 Cell values are flat: `attributes` and `properties` are property lists
 (`[{"name": ..., "value": ...}, ...]`); `scripting` and `label` are strings.
 
+`report_scheme.column_headers` maps each column id to its human-readable title.
+**Decision (2026-11-02):** a header value may use the same rich-text structure as a
+cell value — a plain string, a list of parts, `{"text": ..., "role": ...}`, or
+`{"parts": [...]}` — so consumers can show/hide or style parts by `role`. The MDD
+reader still emits plain strings today; consumers are expected to accept the richer
+form.
+
 ## 4. Config options
 
 The CLI `--config-*` options control **which parts are written to the output JSON**:
