@@ -8,7 +8,8 @@ The reader flattens the nested MDM object model into flat rows, each with a uniq
   shared-list reference instead of expanding it, it is written as
   ``Parent.Categories[@SL_Name]``.
 - ``mdm`` (placeholder): the child's ``FullName`` is used as-is, assuming it already
-  contains the full dotted path (no parent prefix is appended).
+  contains the full dotted path (no parent prefix is appended). A missing ``FullName``
+  is an error.
 
 This module is pure string/attribute manipulation: it only reads ``.Name`` /
 ``.FullName`` / ``.IsReference`` off the objects it is handed, so it can be unit-tested
@@ -67,13 +68,52 @@ def _local_name(item):
     return f'{item.Name}' if hasattr(item, 'Name') else f'{item}'
 
 
-def _full_name(item):
-    """Return an item's ``FullName`` (falling back to its local ``Name``).
+def _safe_name(item):
+    """Return a never-failing, best-effort name for an item (for error messages).
 
-    TODO (placeholder for the ``mdm`` convention): review whether falling back to
-    ``Name`` is the right behavior for items that do not expose ``FullName``.
+    Tries ``Name``, then ``FullName``, then falls back to the raw string form of the
+    object, and finally to a constant. This is only used to describe an item when
+    another operation has already failed, so it must never raise.
     """
-    return f'{item.FullName}' if hasattr(item, 'FullName') else _local_name(item)
+    for attr in ('Name', 'FullName'):
+        try:
+            value = getattr(item, attr)
+        except Exception:
+            continue
+        try:
+            return f'{value}'
+        except Exception:
+            continue
+    try:
+        return f'{item}'
+    except Exception:
+        return '<unprintable item>'
+
+
+def _safe_path(parent, child):
+    """Return a never-failing dotted ``parent.child`` description (for error messages)."""
+    parent_part = _safe_name(parent) if parent is not None else ''
+    child_part = _safe_name(child)
+    return f'{parent_part}.{child_part}' if parent_part else child_part
+
+
+def _require_full_name(item, display=None):
+    """Return ``item.FullName``, raising a detailed error if it is missing.
+
+    ``FullName`` is a COM property that win32com exposes as a Python attribute, so a
+    missing property surfaces as :class:`AttributeError`; that original error is chained
+    with ``from``. ``display`` is a pre-computed safe name for the error message (see
+    :func:`_safe_name` / :func:`_safe_path`); it is derived when omitted.
+    """
+    if display is None:
+        display = _safe_name(item)
+    try:
+        full_name = item.FullName
+    except AttributeError as e:
+        raise AttributeError(
+            f'Unable to make a row name for "{display}": the item has no "FullName" property.'
+        ) from e
+    return f'{full_name}'
 
 
 def is_reference(item):
@@ -87,7 +127,7 @@ def is_reference(item):
 def make_root_name(item, convention=None):
     """Name a top-level row (the item itself)."""
     if _is_fullname_mode(convention):
-        return _full_name(item)
+        return _require_full_name(item)
     return _local_name(item)
 
 
@@ -97,7 +137,7 @@ def make_child_name(parent, child, convention=None):
     ``parent`` may be an item object or an already-composed parent name string.
     """
     if _is_fullname_mode(convention):
-        return _full_name(child)
+        return _require_full_name(child, display=_safe_path(parent, child))
     convention = resolve_convention(convention)
     return f'{_local_name(parent)}{convention["separator"]}{_local_name(child)}'
 
@@ -112,9 +152,7 @@ def make_category_name(parent, child, child_name=None, is_reference=False,
     default).
     """
     if _is_fullname_mode(convention):
-        # TODO (placeholder for the ``mdm`` convention): review category / shared-list
-        # naming in fullname mode.
-        return _full_name(child)
+        return _require_full_name(child, display=_safe_path(parent, child))
     convention = resolve_convention(convention)
     if child_name is None:
         child_name = _local_name(child)

@@ -84,6 +84,25 @@ class TestMdmConvention(unittest.TestCase):
         child = SimpleNamespace(Name='Cat', FullName='Q1.Categories[Cat]')
         self.assertEqual(rnm.make_category_name('Q1', child, convention='mdm'), 'Q1.Categories[Cat]')
 
+    def test_missing_full_name_raises_detailed_error(self):
+        child = SimpleNamespace(Name='SubField')  # no FullName
+        with self.assertRaises(AttributeError) as ctx:
+            rnm.make_child_name('Block', child, convention='mdm')
+        err = ctx.exception
+        self.assertIn('Block.SubField', str(err))
+        self.assertIn('FullName', str(err))
+        # the original AttributeError must be chained via "from"
+        self.assertIsNotNone(err.__cause__)
+        self.assertIsInstance(err.__cause__, AttributeError)
+
+    def test_missing_full_name_and_name_uses_raw_fallback(self):
+        child = object()  # has neither Name nor FullName
+        with self.assertRaises(AttributeError) as ctx:
+            rnm.make_root_name(child, convention='mdm')
+        err = ctx.exception
+        self.assertIn('FullName', str(err))
+        self.assertIsNotNone(err.__cause__)
+
 
 if __name__ == '__main__':
     unittest.main()

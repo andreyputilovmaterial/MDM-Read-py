@@ -158,7 +158,8 @@ by `--config-row-name-convention`:
   configurable through the reader config key `config_row_name_reference_prefix`, but on
   purpose it is **not** exposed as a CLI flag).
 - **`mdm`** (placeholder) — use each item's `FullName` as-is, assuming it already
-  contains the full dotted path. Category / shared-list handling is still under review.
+  contains the full dotted path. A missing `FullName` is an error. Category /
+  shared-list handling is still under review.
 
 > The `.` separator is significant: the diff tool uses it to group rows hierarchically
 > when comparing MDD reports, and other consumers may rely on it too. Only change the

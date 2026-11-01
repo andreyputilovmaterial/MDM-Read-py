@@ -168,8 +168,9 @@ Cell values are flat: `attributes` and `properties` are property lists
   `stepover` mode, prefixes shared-list references with `@`
   (`Parent.Categories[@SL_Name]`); the `@` is configurable via
   `config_row_name_reference_prefix` but intentionally has no CLI flag.
-- `mdm` is a placeholder: child rows use the item's `FullName` as-is. Category /
-  shared-list behavior still needs review.
+- `mdm` is a placeholder: child rows use the item's `FullName` as-is; a missing
+  `FullName` raises a detailed error (no fallback). Category / shared-list behavior
+  still needs review.
 - `__read_process_field` now threads `parent_name` down and builds names through
   `row_name_maker` instead of post-prefixing recursion results (behavior-preserving for
   `ap`).

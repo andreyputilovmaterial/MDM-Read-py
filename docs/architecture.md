@@ -88,7 +88,8 @@ Each row's `name` is its unique identifier. How it is spelled is controlled by
   configurable through `config_row_name_reference_prefix`, but is intentionally **not**
   a CLI flag).
 - **`mdm`** (placeholder) — use each item's `FullName` as-is, assuming it already
-  contains the full dotted path. Category / shared-list handling is still under review.
+  contains the full dotted path. A missing `FullName` is an error. Category /
+  shared-list handling is still under review.
 
 The convention used is recorded in the report's `flags` as
 `mdmreadpy:config:row-name-convention:<convention>`, so consumers can branch on it.
