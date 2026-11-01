@@ -1,6 +1,6 @@
 # Project Context — MDD-read-py (`mdmreadpy`)
 
-> Last updated: 2026-10-23
+> Last updated: 2026-11-01
 > Status: initial capture. Architecture + design decisions + review findings recorded.
 >
 > **Convention:** read this file at the start of every task and update it at the end,
@@ -28,8 +28,8 @@ Hard requirements to actually read an MDD:
 - Package root: `src/lib/mdmreadpy`
 - Source modules: `src/lib/mdmreadpy/src/`
 - Vendored submodule (JSON → HTML): `src/lib/mdmreadpy/src/lib/mdmreportpy/`
-- Build chain: `build.bat` → version `GENERATED/_VERSION.py` → `mdmreportpy` build →
-  `pinliner` single-file bundle.
+- Build chain: `build.bat` (Windows) / `build.sh` (macOS/Linux) → version
+  `GENERATED/_VERSION.py` → `mdmreportpy` build → `pinliner` single-file bundle.
 
 ## 3. Modules
 
@@ -51,7 +51,7 @@ Hard requirements to actually read an MDD:
   report_datetime_utc,
   report_datetime_local,
   source_file_metadata: [ {name, value, role?} ],
-  report_scheme: { columns, column_headers, flags: ["data-type:mdd"] },
+  report_scheme: { columns, column_headers, flags: ["data-type:mdd", "mdmreadpy:version:<version>"] },
   sections: [ {name, content: [row, ...]}, ... ]
 }
 ```
@@ -143,6 +143,16 @@ Cell values are flat: `attributes` and `properties` are property lists
   `launcher.py`.
 - Clarified `open` vs `join` semantics and the `contexts` (Question/Analysis) meaning
   across comments, docstrings and docs.
+
+### Applied changes (2026-11-01)
+
+- Added `build.sh` (and `src/lib/mdmreportpy/build.sh`) as the POSIX (macOS/Linux)
+  counterparts of the existing `build.bat` files, mirroring the same steps: clear
+  `dist/`, write `GENERATED/_VERSION.py`, rebuild the `mdmreportpy` template, run
+  `pinliner`, patch the bundle entry point, and copy LICENSE/README/requirements.
+  Verified end-to-end on macOS (exit 0).
+- Added a `mdmreadpy:version:<version>` entry to `report_scheme.flags`, sourced from
+  `GENERATED/_VERSION.py`.
 
 ## 7. Roadmap
 

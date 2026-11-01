@@ -122,7 +122,7 @@ primary (safe) source.
   "report_scheme": {
     "columns": ["name", "label", "attributes", "properties", "scripting", "langcode-..."],
     "column_headers": {...},
-    "flags": ["data-type:mdd"]
+    "flags": ["data-type:mdd", "mdmreadpy:version:<version>"]
   },
   "sections": [
     { "name": "languages",    "content": [...] },
@@ -143,8 +143,9 @@ full shape and column/row conventions.
 
 ## Build
 
-`build.bat` generates `src/GENERATED/_VERSION.py`, rebuilds the vendored
-`mdmreportpy`, and produces the single-file `dist/mdmtoolsap_bundle.py`.
+`build.bat` (Windows) or `build.sh` (macOS/Linux) generates
+`src/GENERATED/_VERSION.py`, rebuilds the vendored `mdmreportpy`, and produces the
+single-file `dist/mdmtoolsap_bundle.py`.
 
 ## Documentation
 

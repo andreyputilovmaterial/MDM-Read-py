@@ -212,7 +212,7 @@ class MDMDocument:
         # prep some variables - list of languages, list of features, columns, etc
         translations_list = [ f'{langcode}' for langcode in self.__document.Languages ]
         self.__translations = translations_list
-        flags_list = [ 'data-type:mdd' ]
+        flags_list = [ 'data-type:mdd', f'mdmreadpy:version:{script_version.strip()}' ]
         columns_list = ['name']
         for feature_spec in self.__config['features']:
             col_add = None

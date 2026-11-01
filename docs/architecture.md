@@ -33,7 +33,7 @@ JSON "report" shape that is consumed by:
   report_datetime_utc,
   report_datetime_local,
   source_file_metadata: [ {name, value, role?} ],
-  report_scheme: { columns, column_headers, flags: ["data-type:mdd"] },
+  report_scheme: { columns, column_headers, flags: ["data-type:mdd", "mdmreadpy:version:<version>"] },
   sections: [ {name, content: [row, ...]}, ... ]
 }
 ```
