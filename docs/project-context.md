@@ -153,6 +153,9 @@ Cell values are flat: `attributes` and `properties` are property lists
   Verified end-to-end on macOS (exit 0).
 - Added a `mdmreadpy:version:<version>` entry to `report_scheme.flags`, sourced from
   `GENERATED/_VERSION.py`.
+- Switched `GENERATED/_VERSION.py` generation in `build.bat`/`build.sh` (and the nested
+  `mdmreportpy` variants) to write `_VERSION = repr(<git describe>)` via `python -c`,
+  instead of the previous triple-quoted heredoc.
 
 ## 7. Roadmap
 

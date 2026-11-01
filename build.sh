@@ -19,9 +19,7 @@ mkdir -p src/GENERATED
 printf "%s\n" "'''For auto-generated files'''" > src/GENERATED/__init__.py
 printf "%s\n" "# THIS IS AUTO-GENERATED" > src/GENERATED/_VERSION.py
 python -c "from datetime import datetime; print(f'# {datetime.now()}')" >> src/GENERATED/_VERSION.py
-printf "%s\n" "_VERSION = '''" >> src/GENERATED/_VERSION.py
-git describe --tags --dirty >> src/GENERATED/_VERSION.py
-printf "%s\n" "'''" >> src/GENERATED/_VERSION.py
+python -c "import subprocess; v=subprocess.run(['git','describe','--tags','--dirty'],stdout=subprocess.PIPE).stdout.decode().strip(); print('_VERSION = '+repr(v))" >> src/GENERATED/_VERSION.py
 echo "Done"
 
 echo "-"

@@ -15,9 +15,7 @@ IF NOT EXIST src\GENERATED MKDIR src\GENERATED
 ECHO '''For auto-generated files''' > src\GENERATED\__init__.py
 ECHO # THIS IS AUTO-GENERATED > src\GENERATED\_VERSION.py
 python -c"from datetime import datetime; print(f'# {datetime.now()}')" >> src\GENERATED\_VERSION.py
-ECHO _VERSION = ''' >> src\GENERATED\_VERSION.py
-git describe --tags --dirty >> src\GENERATED\_VERSION.py
-ECHO ''' >> src\GENERATED\_VERSION.py
+python -c"import subprocess; v=subprocess.run(['git','describe','--tags','--dirty'],stdout=subprocess.PIPE).stdout.decode().strip(); print('_VERSION = '+repr(v))" >> src\GENERATED\_VERSION.py
 ECHO Done
 
 ECHO -
