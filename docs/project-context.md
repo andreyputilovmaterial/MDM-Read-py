@@ -1,6 +1,12 @@
 # Project Context — MDD-read-py (`mdmreadpy`)
 
-> Last updated: 2026-11-02
+> Last updated: 2026-11-03
+> (2026-11-03) Launcher smoke test: added a dependency-free ``--program done`` (prints
+> ``done`` in green) to ``src/launcher.py`` plus ``tests/test_done_program.py``. The
+> launcher now imports ``read_mdd`` / the reporter / the version string lazily via
+> ``_import_module`` / ``_import_version`` so ``done`` loads before any build step or
+> optional deps are present. `build.sh`/`build.bat` now finish with
+> `python dist/mdmtoolsap_bundle.py --program done` to smoke-test the built bundle.
 > (2026-11-02) Regression guard: added `tests/test_bundle_excludes_pinliner.py`, which
 > runs the `pinliner ... src` build step and asserts the bundle's `inliner_packages`
 > table contains no module named `*pinliner*` or `*src_dev_build*` (pinliner is

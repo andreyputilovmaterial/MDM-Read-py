@@ -8,27 +8,16 @@ Used both during development and from the pinliner bundle (``launcher.main()``).
 import argparse
 # from pathlib import Path
 import traceback, sys
+import importlib
 
 
 
 
 
 
-if __name__ == '__main__':
-    # run as a program
-    from GENERATED._VERSION import _VERSION as diff_script_version
-    import read_mdd
-    from lib.mdmreportpy.src import report_create as report_html_create
-elif '.' in __name__:
-    # package
-    from .GENERATED._VERSION import _VERSION as diff_script_version
-    from . import read_mdd
-    from .lib.mdmreportpy.src import report_create as report_html_create
-else:
-    # included with no parent package
-    from GENERATED._VERSION import _VERSION as diff_script_version
-    read_mdd
-    from lib.mdmreportpy.src import report_create as report_html_create
+# Entry-point modules (``read_mdd``, the reporter, and the generated version string)
+# are imported lazily inside their ``call_*`` handlers via :func:`_import_module`, so
+# ``--program done`` works as a dependency-free smoke test in a fresh checkout.
 
 
 
@@ -41,10 +30,34 @@ STDOUT_COLOR_GREEN = "\033[32m"
 
 
 
+def _import_module(flat_name):
+    # Lazily import an entry-point module; mirrors the three-way conditional
+    # import used by entry-point scripts.
+    if __name__ == '__main__':
+        return importlib.import_module(flat_name)
+    elif '.' in __name__:
+        return importlib.import_module('.' + flat_name, package=__package__)
+    else:
+        return importlib.import_module(flat_name)
+
+
+def _import_version():
+    # The generated version string only exists after a build step has written
+    # ``GENERATED/_VERSION.py``. Fall back to a placeholder so ``--program version``
+    # still works (and ``--program done`` never needs it) in a fresh checkout.
+    try:
+        version_module = _import_module('GENERATED._VERSION')
+    except ImportError:
+        return 'unknown'
+    return version_module._VERSION
+
+
 def call_read_mdd_program(*argcs,**kwargs):
+    read_mdd = _import_module('read_mdd')
     return read_mdd.entry_point(*argcs,**kwargs)
 
 def call_report_html_program(*argcs,**kwargs):
+    report_html_create = _import_module('lib.mdmreportpy.src.report_create')
     return report_html_create.entry_point(*argcs,**kwargs)
 
 def call_test_program(*argcs,**kwargs):
@@ -54,9 +67,12 @@ hello, world! From mdd_read
     print(msg)
     return True
 
+def call_done_program(*argcs,**kwargs):
+    print(f'{STDOUT_COLOR_GREEN}done{STDOUT_COLOR_RESET}')
+    return True
+
 def call_printversion_program(*argcs,**kwargs):
-    msg = diff_script_version
-    msg = msg.strip()
+    msg = _import_version().strip()
     print(msg)
     return True
 
@@ -68,6 +84,7 @@ run_programs = {
     'report': call_report_html_program,
     'report_html': call_report_html_program,
     'test': call_test_program,
+    'done': call_done_program,
     'version': call_printversion_program,
 }
 
