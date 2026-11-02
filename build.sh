@@ -64,4 +64,26 @@ echo "Done"
 
 echo "-"
 echo "-"
+echo "Collect optional per-reader/per-reporter requirements into dist/optional_dependencies/"
+mkdir -p dist/optional_dependencies
+for requirements in $(find src/lib -type f -name 'requirements.txt' -not -path '*/.git/*' -not -path '*/dist/*' -not -path '*/GENERATED/*' | sort); do
+    rel="${requirements#src/}"
+    dest="dist/optional_dependencies/$rel"
+    mkdir -p "$(dirname "$dest")"
+    echo "copying optional requirements: $requirements -> $dest"
+    cp "$requirements" "$dest"
+done
+echo "Done"
+
+echo "-"
+echo "-"
+echo "Copy and adapt run_init scripts to dist..."
+sed -e 's#src/lib#optional_dependencies#g' run_init.sh > dist/run_init.sh
+sed -e 's#src\\lib#optional_dependencies#g' run_init.bat > dist/run_init.bat
+chmod +x dist/run_init.sh
+chmod +x dist/run_init.bat
+echo "Done"
+
+echo "-"
+echo "-"
 echo "All done, the end"

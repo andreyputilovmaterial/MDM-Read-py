@@ -1,2 +1,10 @@
 # Runtime dependencies (pip-installable packages), one per line.
 # Install with:  pip install -r requirements.txt
+#
+# Only needed on Windows, and only to actually open an MDD: pywin32 provides
+# win32com.client, which drives the MDM.Document COM server of IBM/Unicom
+# Professional. The import is lazy (src/win32com_adapter.py), so the module can
+# be imported on any OS; opening an MDD without pywin32/COM fails early with a
+# readable message.
+
+pywin32

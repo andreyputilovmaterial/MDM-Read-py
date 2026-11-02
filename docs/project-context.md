@@ -1,6 +1,11 @@
 # Project Context — MDD-read-py (`mdmreadpy`)
 
 > Last updated: 2026-11-02
+> (2026-11-02) Packaging: `requirements.txt` now lists `pywin32` (Windows-only, lazy
+> import); `build.bat`/`build.sh` collect the nested `mdmreportpy` `requirements.txt`
+> into `dist/optional_dependencies/` and copy `run_init.bat`/`run_init.sh` into `dist/`
+> (`run_init` prepares a `.venv` and installs base + optional requirements best-effort).
+> The three launch strategies are documented in `README.md`.
 > Status: initial capture. Architecture + design decisions + review findings recorded.
 > (2026-11-02) Recorded an open decision on translation column-header wording (see §8).
 > (2026-11-02) Decision: rich-text (`parts`/`role`) is a supported `column_headers` format.

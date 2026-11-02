@@ -59,6 +59,31 @@ python src/launcher.py --program report --inpfile "path\to\file.mdd.json"
 Or edit and run `run.bat` (example workflow: read MDD → JSON, generate HTML, then
 delete the temporary JSON).
 
+### Three ways to launch
+
+As everywhere in this toolchain, the program can be started three equivalent ways:
+
+1. **Single-file bundle** (distribution). `build.bat`/`build.sh` produce
+   `dist/mdmtoolsap_bundle.py` and append `from src import launcher; launcher.main()`.
+   Prepare the environment with `run_init`, then run the bundle with the venv Python:
+
+   ```
+   run_init.sh
+   ./.venv/bin/python dist/mdmtoolsap_bundle.py --program read_mdd --mdd "path\to\file.mdd"
+   ```
+
+2. **Direct module** (development). Run the entry-point module directly:
+
+   ```
+   python src/read_mdd.py --mdd "path\to\file.mdd"
+   ```
+
+3. **Launcher proxy** (development). Run the universal dispatcher directly:
+
+   ```
+   python src/launcher.py --program read_mdd --mdd "path\to\file.mdd"
+   ```
+
 ### Options (`read_mdd.py`)
 
 These options control **which parts are written to the output JSON** — they configure
@@ -175,7 +200,10 @@ by `--config-row-name-convention`:
 
 `build.bat` (Windows) or `build.sh` (macOS/Linux) generates
 `src/GENERATED/_VERSION.py`, rebuilds the vendored `mdmreportpy`, and produces the
-single-file `dist/mdmtoolsap_bundle.py`.
+single-file `dist/mdmtoolsap_bundle.py`. It also collects the nested
+`mdmreportpy` `requirements.txt` into `dist/optional_dependencies/` and copies
+`run_init.bat`/`run_init.sh` into `dist/`; `run_init` creates a `.venv`, installs this
+package's `requirements.txt`, then installs the optional requirements best-effort.
 
 ## Documentation
 

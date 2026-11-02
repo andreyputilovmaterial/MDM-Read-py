@@ -74,5 +74,35 @@ ECHO Done
 
 ECHO -
 ECHO -
+ECHO Collect optional per-reader/per-reporter requirements into dist\optional_dependencies...
+powershell -NoProfile -Command ^
+"$srcRoot = (Resolve-Path 'src').Path; ^
+$destRoot = 'dist\optional_dependencies'; ^
+Get-ChildItem -Path (Join-Path $srcRoot 'lib') -Recurse -Filter 'requirements.txt' -File | Where-Object { ^
+    $_.FullName -notmatch '\\dist\\' -and $_.FullName -notmatch '\\.git\\' -and $_.FullName -notmatch '\\GENERATED\\' ^
+} | ForEach-Object { ^
+    $rel = $_.FullName.Substring($srcRoot.Length + 1); ^
+    $dest = Join-Path $destRoot $rel; ^
+    $destDir = Split-Path -Parent $dest; ^
+    if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }; ^
+    Copy-Item $_.FullName $dest -Force; ^
+    Write-Host ('copying optional requirements: ' + $rel) ^
+}; "
+ECHO Done
+
+ECHO -
+ECHO -
+ECHO Copy and adapt run_init scripts to dist...
+powershell -NoProfile -Command ^
+"$c = Get-Content 'run_init.bat' -Encoding 'Default'; ^
+$c = $c -replace 'src\\lib', 'optional_dependencies'; ^
+Set-Content 'dist\run_init.bat' $c -Encoding 'Default'; ^
+$c = Get-Content 'run_init.sh' -Encoding 'Default'; ^
+$c = $c -replace 'src/lib', 'optional_dependencies'; ^
+Set-Content 'dist\run_init.sh' $c -Encoding 'Default'; "
+ECHO Done
+
+ECHO -
+ECHO -
 ECHO All done, the end
 
