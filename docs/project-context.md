@@ -1,6 +1,11 @@
 # Project Context — MDD-read-py (`mdmreadpy`)
 
 > Last updated: 2026-11-03
+> (2026-11-03) Added `tests/fixtures/` with four committed example *outputs* of
+> `read_mdd` (small synthetic MDD reports, not real data) and `tests/test_fixtures.py`
+> pinning their report shape. The same JSONs are consumed downstream by the diff tool
+> and the reporters as example inputs.
+
 > (2026-11-03) Launcher smoke test: added a dependency-free ``--program done`` (prints
 > ``done`` in green) to ``src/launcher.py`` plus ``tests/test_done_program.py``. The
 > launcher now imports ``read_mdd`` / the reporter / the version string lazily via
