@@ -508,6 +508,7 @@ class MDMDocument:
         try:
 
             result_item = {
+                **self.__read_mdm_item(item),
                 **{
                     'name': f'{item_name}',
                     'attributes': {
@@ -516,7 +517,6 @@ class MDMDocument:
                         #'is_grid': item.IsGrid,
                     },
                 },
-                **self.__read_mdm_item(item)
             }
             object_type_value = item.ObjectTypeValue
             # ObjectTypeValue constants:
