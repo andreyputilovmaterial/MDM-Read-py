@@ -1,6 +1,13 @@
 # Project Context — MDD-read-py (`mdmreadpy`)
 
-> Last updated: 2026-11-03
+> Last updated: 2026-11-04
+> (2026-11-04) Adopted `docs/maintenance-log.md` and applied its entry-point import
+> convention: entry-point modules (`src/launcher.py`, `src/read_mdd.py`) now select
+> imports on `__package__` (two-branch) instead of the old three-branch `__name__` split.
+> Updated the pinliner submodule to `7152465` and switched `build.sh`/`build.bat` to
+> `--main src.launcher --main-attr main` (no more appending `launcher.main()`). Plain-script
+> invocation is dropped — use `python -m src.<module>`. Updated
+> `.clinerules/02-python-portability.md`, `README.md`, and `tests/test_done_program.py`.
 > (2026-11-03) Added `tests/fixtures/` with four committed example *outputs* of
 > `read_mdd` (small synthetic MDD reports, not real data) and `tests/test_fixtures.py`
 > pinning their report shape. The same JSONs are consumed downstream by the diff tool

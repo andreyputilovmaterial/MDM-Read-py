@@ -25,21 +25,8 @@ import traceback, sys
 # # import pythoncom
 # import win32com.client
 # from win32com_adapter import Win32Client
-if __name__ == '__main__':
-    # run as a program
-    from GENERATED._VERSION import _VERSION as script_version
-    from win32com_adapter import Win32Client
-    from row_name_maker import (
-        ROW_NAME_CONVENTIONS,
-        DEFAULT_ROW_NAME_CONVENTION,
-        DEFAULT_REFERENCE_PREFIX,
-        make_root_name,
-        make_child_name,
-        make_category_name,
-        is_reference,
-    )
-elif '.' in __name__:
-    # package
+if __package__:
+    # package context
     from .GENERATED._VERSION import _VERSION as script_version
     from .win32com_adapter import Win32Client
     from .row_name_maker import (
@@ -52,7 +39,7 @@ elif '.' in __name__:
         is_reference,
     )
 else:
-    # included with no parent package
+    # flat context: no parent package
     from GENERATED._VERSION import _VERSION as script_version
     from win32com_adapter import Win32Client
     from row_name_maker import (

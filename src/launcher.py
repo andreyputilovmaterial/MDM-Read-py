@@ -31,13 +31,17 @@ STDOUT_COLOR_GREEN = "\033[32m"
 
 
 def _import_module(flat_name):
-    # Lazily import an entry-point module; mirrors the three-way conditional
-    # import used by entry-point scripts.
-    if __name__ == '__main__':
-        return importlib.import_module(flat_name)
-    elif '.' in __name__:
+    # Lazily import an entry-point module. Imports are selected on `__package__`
+    # (set reliably by the import system in every case), not `__name__`:
+    #
+    #   * `__package__` truthy  ->  relative import (`python -m src.launcher`,
+    #     or imported via the pinliner bundle).
+    #   * `__package__` falsy   ->  flat import (inlined with no parent package).
+    if __package__:
+        # package context
         return importlib.import_module('.' + flat_name, package=__package__)
     else:
+        # flat context: no parent package
         return importlib.import_module(flat_name)
 
 

@@ -46,14 +46,14 @@ consumed by, among others:
 Direct:
 
 ```
-python src/read_mdd.py --mdd "path\to\file.mdd"
+python -m src.read_mdd --mdd "path\to\file.mdd"
 ```
 
 Universal launcher:
 
 ```
-python src/launcher.py --program read_mdd --mdd "path\to\file.mdd"
-python src/launcher.py --program report --inpfile "path\to\file.mdd.json"
+python -m src.launcher --program read_mdd --mdd "path\to\file.mdd"
+python -m src.launcher --program report --inpfile "path\to\file.mdd.json"
 ```
 
 Or edit and run `run.bat` (example workflow: read MDD → JSON, generate HTML, then
@@ -64,24 +64,25 @@ delete the temporary JSON).
 As everywhere in this toolchain, the program can be started three equivalent ways:
 
 1. **Single-file bundle** (distribution). `build.bat`/`build.sh` produce
-   `dist/mdmtoolsap_bundle.py` and append `from src import launcher; launcher.main()`.
-   Prepare the environment with `run_init`, then run the bundle with the venv Python:
+   `dist/mdmtoolsap_bundle.py` with pinliner's `--main src.launcher --main-attr main`
+   entry point (the bundle runs `launcher.main()` when executed directly). Prepare the
+   environment with `run_init`, then run the bundle with the venv Python:
 
    ```
    run_init.sh
    ./.venv/bin/python dist/mdmtoolsap_bundle.py --program read_mdd --mdd "path\to\file.mdd"
    ```
 
-2. **Direct module** (development). Run the entry-point module directly:
+2. **Direct module** (development). Run the entry-point module directly with `-m`:
 
    ```
-   python src/read_mdd.py --mdd "path\to\file.mdd"
+   python -m src.read_mdd --mdd "path\to\file.mdd"
    ```
 
-3. **Launcher proxy** (development). Run the universal dispatcher directly:
+3. **Launcher proxy** (development). Run the universal dispatcher with `-m`:
 
    ```
-   python src/launcher.py --program read_mdd --mdd "path\to\file.mdd"
+   python -m src.launcher --program read_mdd --mdd "path\to\file.mdd"
    ```
 
 ### Options (`read_mdd.py`)
