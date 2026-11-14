@@ -1,6 +1,8 @@
 # Project Context — MDD-read-py (`mdmreadpy`)
 
-> Last updated: 2026-11-04
+> Last updated: 2026-11-14
+> (2026-11-14) Added `docs/logs-of-issues.md` — the log for bugs and fixes. It is
+> updated only on explicit user request, never proactively.
 > (2026-11-04) Adopted `docs/maintenance-log.md` and applied its entry-point import
 > convention: entry-point modules (`src/launcher.py`, `src/read_mdd.py`) now select
 > imports on `__package__` (two-branch) instead of the old three-branch `__name__` split.
@@ -39,6 +41,9 @@
 > **Convention:** read this file at the start of every task and update it at the end,
 > so it stays the permanently updated context of the current work (see
 > `.clinerules/00-project-context.md`).
+>
+> **Issues log:** `docs/logs-of-issues.md` is the log for bugs and fixes. Update it
+> only on explicit user request — never proactively.
 
 ## 1. What this package does
 
