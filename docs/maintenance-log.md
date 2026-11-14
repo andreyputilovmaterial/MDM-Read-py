@@ -29,6 +29,38 @@ like the `Input` example; anything that does not match should be updated.
 
 ---
 
+## Cross-repo sync: pull updates, advance owned submodules, adopt commit rules, ignore `.roadmap-*`
+
+- **Requested:** 2026-11-15
+- **Implemented:** 2026-11-15
+- **Where:** `.gitignore`, `.clinerules/`, `docs/maintenance-log.md`.
+
+### What & why
+
+Brought this repo in line with the shared cross-project maintenance conventions
+and refreshed it from its remotes: pulled new updates; recursively updated
+submodules to the recorded commits; advanced owned submodules
+(`andreyputilovmaterial/*`, `The-city-not-present/pinliner`) to their latest
+remote commit (other external submodules stay pinned to the recorded pointer);
+added `.roadmap-*` to `.gitignore` for provisional planning notes; adopted the
+`2x-` commit-message rules from `MDM-Diff-py/.clinerules`; and added the
+submodule-sync-at-task-start rule.
+
+### Repeat
+
+1. `.gitignore` should ignore files starting with `.roadmap-` (`.roadmap-*`).
+2. `.clinerules/` should contain `20-git-commit-messages-wording.md`,
+   `21-git-submodules-commits-order.md`, `22-when-making-commits.md`,
+   `29-github-issues.md`, and a submodule-sync-at-task-start rule; the older
+   `08-commit-messages.md`, `09-github-issues.md`, `11-submodules-commits.md`
+   should be replaced by the `2x-` equivalents.
+3. Submodules owned by `andreyputilovmaterial` or `The-city-not-present`
+   (`pinliner`, `myers-diff`) should be advanced to their latest remote commit;
+   any other external submodule should stay pinned to the recorded pointer.
+4. `docs/maintenance-log.md` should exist and list this entry newest-first.
+
+---
+
 ## Build scripts: do not update git submodules recursively; recursive `build.sh` calls stay
 
 - **Requested:** 2026-11-07
