@@ -15,6 +15,10 @@ JSON "report" shape that is consumed by:
 - the diff tool (compares two JSON reports and writes a new JSON report),
 - and any other consumer of the common JSON shape.
 
+This page describes the reader's code and its JSON output. The **input** format — the
+MDD object model itself (questions/fields, labels, categories, shared lists, question
+types) — is described in `docs/mdd-model.md`.
+
 ## 2. Modules
 
 | Module | Role |
