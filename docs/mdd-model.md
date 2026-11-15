@@ -13,6 +13,18 @@ format with nothing to do with MDD itself — see `mdmreportpy`'s
 On disk an MDD file is XML, but in the host software (IBM/Unicom Professional) it is a
 cleanly organized object model. The XML detail is irrelevant to this reader.
 
+## Terminology
+
+A couple of words used here are the author's own descriptive terms, not necessarily the
+official MDD terminology:
+
+- **Scalar** / **non-scalar** — used in "Question types" for "stores a single value per
+  response" vs "stores a repeated block". "Scalar" does not appear in the official
+  documentation, but no better word was found — the concept really is scalar.
+- **Modifiers** — used in "Properties and Modifiers" for the flags that change an
+  object's behavior. It is not confirmed to be the official term, but the word carries
+  the intended meaning.
+
 ## Objects
 
 Everything is organized into **Questions/Fields/Items** (the name varies by context)
@@ -42,7 +54,10 @@ Each object (Question/Field/Item, Shared list, Page, Category/Element) carries:
 
 ## Question types
 
-**Scalar:**
+"Scalar" vs "non-scalar" is about the **stored response**, not about whether a field
+has sub-fields (see "Helper fields" below).
+
+**Scalar — stores a single value per response:**
 
 - `text`, `date/time`, `long` (integer), `float` (real number);
 - **categorical** — single-punch or multi-punch (the most common). The format barely
@@ -67,6 +82,25 @@ Each object (Question/Field/Item, Shared list, Page, Category/Element) carries:
 - **Iterations** are either a list of categories (most common) or a numeric range
   (rare, but supported).
 - The root MDD document is itself a block of fields, so the whole document is a tree.
+
+## Helper fields
+
+Helper fields (`.HelperFields`) are nested sub-fields attached to a field.
+
+- **Scalar fields can definitely carry them.** The motivating example is a categorical
+  "Gender" question whose categories include an "Other not listed" option plus an
+  `OtherSpec` text field: `OtherSpec` is not a response category, it is a helper field
+  that captures the free-text "other" answer.
+- **Non-scalar fields can carry them too.** A loop with helper fields on the loop
+  itself has been verified to work. The reader processes helper fields uniformly on
+  every field type (rather than special-casing scalar fields), so both cases are
+  handled.
+
+Helper fields are full fields in their own right, so they can themselves be any type
+and carry their own categories, sub-fields, and further helper fields. In other words,
+a "flat" scalar field can still hold a deeper tree of nested fields hanging off it via
+its helper fields. In the reader's flattened output these appear as additional rows and
+are marked `is_helper_field` in `attributes`.
 
 ## Categories
 

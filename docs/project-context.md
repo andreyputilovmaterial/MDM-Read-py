@@ -1,6 +1,14 @@
 # Project Context — MDD-read-py (`mdmreadpy`)
 
-> Last updated: 2026-11-14
+> Last updated: 2026-11-15
+> (2026-11-15) Corrected `docs/mdd-model.md`: "scalar" vs "non-scalar" is about the
+> stored response, not whether a field has sub-fields. Any field can carry **helper
+> fields** (`.HelperFields`) — e.g. an `OtherSpec` text field on a categorical "Gender"
+> question with an "Other not listed" category — and helper fields are full fields that
+> can themselves nest categories/subfields/helper fields (flattened as `is_helper_field`
+> rows). Also added a "Terminology" note ("scalar"/"non-scalar" and "modifiers" are
+> the author's own descriptive words, not confirmed official terms) and noted helper
+> fields were verified on a loop, so non-scalar fields carry them too.
 > (2026-11-14) Added `docs/logs-of-issues.md` — the log for bugs and fixes. It is
 > updated only on explicit user request, never proactively.
 > (2026-11-04) Adopted `docs/maintenance-log.md` and applied its entry-point import
